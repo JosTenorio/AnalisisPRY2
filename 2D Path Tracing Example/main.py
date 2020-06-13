@@ -7,7 +7,6 @@ import rt
 import threading
 
 def raytrace():
-    # Raytraces the scene progessively
     while True:
         # random point in the image
         point = Point(random.uniform(0, 500), random.uniform(0, 500))
@@ -15,31 +14,28 @@ def raytrace():
         pixel = 0
 
         for source in sources:
+
             # calculates direction to light source
-            
             dir = source-point
-            # add jitter
-            # dir.x += random.uniform(0, 25)
-            # dir.y += random.uniform(0, 25)
+            # warning check (0, 0)
 
             # distance between point and light source
             length = rt.length(dir)
-            # normalized distance to source
-            length2 = rt.length(rt.normalize(dir))
+
+            # normalize direction
+            dir = rt.normalize(dir)
             
             free = True
             for seg in segments:                
                 # check if ray intersects with segment
                 dist = rt.raySegmentIntersect(point, dir, seg[0], seg[1])
                 # if intersection, or if intersection is closer than light source
-                if dist > 0 and length2 > dist:
+                if dist != -1 and dist < length:
                     free = False
                     break
 
             if free:        
                 intensity = (1-(length/500))**2
-                # print(len)
-                # intensity = max(0, min(intensity, 255))
                 values = (ref[int(point.y)][int(point.x)])[:3]
                 # combine color, light source and light color
                 values = values * intensity * light
@@ -50,16 +46,10 @@ def raytrace():
             # average pixel value and assign
             px[int(point.x)][int(point.y)] = pixel // len(sources)
 
-def getFrame():
-    # grabs the current image and returns it
-    pixels = np.roll(px, (1, 2), (0, 1))
-    return pixels
-
-# pygame stuff
-h, w = 550, 550
-border = 50
+# pygame init
+h, w = 500, 500
 pygame.init()
-screen = pygame.display.set_mode((w+(2*border), h+(2*border)))
+window = pygame.display.set_mode((w, h))
 pygame.display.set_caption("2D Raytracing")
 done = False
 clock = pygame.time.Clock()
@@ -68,8 +58,8 @@ clock = pygame.time.Clock()
 random.seed()
 
 # image setup
-i = Image.new("RGB", (500, 500), (0, 0, 0))
-px = np.array(i)
+img = Image.new("RGB", (500, 500), (0, 0, 0))
+px = np.array(img)
 
 # reference image for background color
 im_file = Image.open("fondo.png")
@@ -80,7 +70,6 @@ sources = [Point(195, 200), Point(294, 200)]
 
 # light color
 light = np.array([1, 1, 0.75])
-# light = np.array([1, 1, 1])
 
 # warning, point order affects intersection test!!
 segments = [
@@ -97,8 +86,7 @@ segments = [
 
 
 # thread setup
-t = threading.Thread(target = raytrace)  # f being the function that tells how the ball should move
-t.setDaemon(True)  # Alternatively, you can use "t.daemon = True"
+t = threading.Thread(target = raytrace, daemon = True)
 t.start()
 
 # main loop
@@ -108,14 +96,11 @@ while not done:
             done = True
 
     # Clear screen to white before drawing
-    screen.fill((255, 255, 255))
+    window.fill((255, 255, 255))
 
-    # Get a numpy array to display from the simulation
-    npimage=getFrame()
-
-    # Convert to a surface and splat onto screen offset by border width and height
-    surface = pygame.surfarray.make_surface(npimage)
-    screen.blit(surface, (border, border))
+    # Convert to a surface and splat onto screen
+    surface = pygame.surfarray.make_surface(px)
+    window.blit(surface, (0, 0))
 
     pygame.display.flip()
     clock.tick(60)
