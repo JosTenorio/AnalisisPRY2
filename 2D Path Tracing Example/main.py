@@ -8,43 +8,47 @@ import threading
 
 def raytrace():
     while True:
-        # random point in the image
-        point = Point(random.uniform(0, 500), random.uniform(0, 500))
-        # pixel color
-        pixel = 0
 
-        for source in sources:
+        # loop through all the pixels, add 0.1 to aovid division by 0 <- temporal
+        for x in range (500):
+            for y in range (500):
+                point = Point(x + 0.1, y + 0.1)
 
-            # calculates direction to light source
-            dir = source-point
-            # warning check (0, 0)
+                # pixel color
+                pixel = 0
 
-            # distance between point and light source
-            length = rt.length(dir)
+                for source in sources:
 
-            # normalize direction
-            dir = rt.normalize(dir)
-            
-            free = True
-            for seg in segments:                
-                # check if ray intersects with segment
-                dist = rt.raySegmentIntersect(point, dir, seg[0], seg[1])
-                # if intersection, or if intersection is closer than light source
-                if dist != -1 and dist < length:
-                    free = False
-                    break
+                    # calculates direction to light source
+                    dir = source-point
+                    # warning check (0, 0)
 
-            if free:        
-                intensity = (1-(length/500))**2
-                values = (ref[int(point.y)][int(point.x)])[:3]
-                # combine color, light source and light color
-                values = values * intensity * light
-                
-                # add all light sources
-                pixel += values
-            
-            # average pixel value and assign
-            px[int(point.x)][int(point.y)] = pixel // len(sources)
+                    # distance between point and light source
+                    length = rt.length(dir)
+
+                    # normalize direction
+                    dir = rt.normalize(dir)
+
+                    free = True
+                    for seg in segments:
+                        # check if ray intersects with segment
+                        dist = rt.raySegmentIntersect(point, dir, seg[0], seg[1])
+                        # if intersection, or if intersection is closer than light source
+                        if dist != -1 and dist < length:
+                            free = False
+                            break
+
+                    if free:
+                        intensity = (1-(length/500))**2
+                        values = (ref[int(point.y)][int(point.x)])[:3]
+                        # combine color, light source and light color
+                        values = values * intensity * light
+
+                        # add all light sources
+                        pixel += values
+
+                    # average pixel value and assign
+                    px[int(point.x)][int(point.y)] = pixel // len(sources)
 
 # pygame init
 h, w = 500, 500
