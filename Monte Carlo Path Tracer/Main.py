@@ -87,15 +87,17 @@ def tracePath(ray, depth):
     hitSegment = random.randint(0, 1)
     if hitSegment:
         #IF IT DOES, CREATE A NEW DIRECTION AND MODIFY VALUES AND DISTANCE
-        return tracePath (depth+1, point, dir, values, distance)
+        return tracePath(ray, depth + 1)
     return 0
+
+# generate ray bouncing
 
 # globals
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 0
-MAX_DEPTH = 0
+NUM_SAMPLES = 50
+MAX_DEPTH = 2
 
 # pygame setup
 py.init()
