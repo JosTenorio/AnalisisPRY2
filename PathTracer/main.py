@@ -62,6 +62,8 @@ def tracepath (depth, point, dir, values, distance):
     # CHECK IF DIR HITS A LIGHT SOURCE
     lightSource = random.randint(0,1)
     if lightSource:
+        if depth == 0:
+            return 0
         #ADD DISTANCE TO LIGHT SOURCE TO DISTANCE
         intensity = (1 - (distance / 500)) ** 2
         return values * intensity * light
