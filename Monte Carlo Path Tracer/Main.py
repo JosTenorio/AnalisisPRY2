@@ -61,18 +61,18 @@ def renderLight():
                 for i in range (NUM_SAMPLES):
 
                     # get random direction
-                    angle = random.uniform(360)
+                    angle = random.uniform(0, 360)
 
                     # create ray from pixel to random direction
                     ray = Ray(x, y, angle)
 
                     # calculate pixel color by tracing ray path recursively
-                    color += pathTrace(ray, 0)
+                    color += tracePath(ray, 0)
 
                 # average pixel value and assign
                 drawingPixels[x][y] = color // len(lightSources) + NUM_SAMPLES
 
-def pathTrace(ray, depth):
+def tracePath(ray, depth):
     if depth >= MAX_DEPTH:
         return 0
     # CHECK IF DIR HITS A LIGHT SOURCE
@@ -87,7 +87,7 @@ def pathTrace(ray, depth):
     hitSegment = random.randint(0, 1)
     if hitSegment:
         #IF IT DOES, CREATE A NEW DIRECTION AND MODIFY VALUES AND DISTANCE
-        return tracepath (depth+1, point, dir, values, distance)
+        return tracePath (depth+1, point, dir, values, distance)
     return 0
 
 # globals
