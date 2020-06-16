@@ -5,27 +5,20 @@ class Ray:
 
     def __init__(self, x, y, angle):
         self.pos = [x, y]
-        self.dir = [np.cos(angle), np.sin(angle)]
+        radians = np.deg2rad(angle)
+        self.dir = [np.cos(radians), np.sin(radians)]
 
     def draw(self, window):
         py.draw.line(window, (255, 255, 255), self.pos, np.add(self.pos, self.dir), 1)
 
-    def setDir(self, x, y):
-         self.dir[0] = x - self.pos[0]
-         self.dir[1] = y - self.pos[1]
-         self.dir = self.dir / np.linalg.norm(self.dir)
-
-    def cast(self, line):
-        # boundry start point
+    def checkIntersection(self, line):
         x1 = line.a[0]
         y1 = line.a[1]
-        # boundry end point
         x2 = line.b[0]
         y2 = line.b[1]
-        # ray start point
+
         x3 = self.pos[0]
         y3 = self.pos[1]
-        # ray end point
         x4 = self.pos[0] + self.dir[0]
         y4 = self.pos[1] + self.dir[1]
 
@@ -39,7 +32,7 @@ class Ray:
         if 1 > t > 0 and u > 0:
             x = x1 + t * (x2 - x1)
             y = y1 + t * (y2 - y1)
-            pointWithDist = [x, y, u]
-            return pointWithDist
+            intersection = [x, y, u]
+            return intersection
         else:
             return None

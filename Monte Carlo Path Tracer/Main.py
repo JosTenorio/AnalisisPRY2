@@ -19,27 +19,20 @@ def renderLight():
 
                 # calculate direct lighting
                 for source in lightSources:
+                    sourceX = source.pos[0]
+                    sourceY = source.pos[1]
 
-                    # if the pixel is a light source skip
-                    if x == source.pos[0] and y == source.pos[1]:
-                        continue
-
-                    # create a ray from pixel to light source
-                    ray = Ray(x, y, 0)
-                    ray.setDir(source.pos[0], source.pos[1])
+                    # create a line segment from pixel to light source
+                    directLine = Line(x, y, sourceX, sourceY)
 
                     # calculate distance from pixel to light source
-                    sourceDist = math.sqrt(((x-source.pos[0])**2)+((y-source.pos[1])**2))
+                    sourceDist = math.sqrt(((x-sourceX)**2)+((y-sourceY)**2))
 
-                    # check if ray collisions
+                    # check if line segments intersect
                     noCollision = True
                     for boundary in boundaries:
-
-                        # obtain an array [collisionX, collisionY, distance] if collision
-                        pointWithDist = ray.cast(boundary)
-
-                        # if collision is before reaching the source keep pixel black
-                        if pointWithDist is not None and pointWithDist[2] < sourceDist:
+                        intersection = directLine.checkIntersection(boundary)
+                        if intersection is not None:
                             noCollision = False
                             break
 
@@ -73,8 +66,17 @@ def renderLight():
                 drawingPixels[x][y] = color // len(lightSources) + NUM_SAMPLES
 
 def tracePath(ray, depth):
+
+    # end if ray has bounced over the limit
     if depth >= MAX_DEPTH:
         return 0
+
+    # check if ray collisions with a light source
+    for source in lightSources:
+        intersection = ray.cast(Line(source.pos[0], source.pos[1], source.pos[0], source.pos[1]))
+
+
+
     # CHECK IF DIR HITS A LIGHT SOURCE
     lightSource = random.randint(0,1)
     if lightSource:
@@ -96,14 +98,14 @@ def tracePath(ray, depth):
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 50
+NUM_SAMPLES = 0
 MAX_DEPTH = 2
 
 # pygame setup
 py.init()
 WINDOW = py.display.set_mode([WIDTH, HEIGHT])
 py.display.set_caption("2D Path Tracer")
-clock = py.time.Clock()
+CLOCK = py.time.Clock()
 
 # random setup
 random.seed()
@@ -124,10 +126,6 @@ light = np.array([1, 1, 0.75])
 
 # boundary positions
 boundaries = [
-            Line(0, 0, WIDTH, 0, False),
-            Line(0, 0, 0, HEIGHT, False),
-            Line(0, HEIGHT, WIDTH, HEIGHT, False),
-            Line(WIDTH, 0, WIDTH, HEIGHT, False),
             Line(180, 135, 215, 135, False),
             Line(285, 135, 320, 135, False),
             Line(320, 135, 320, 280, False),
@@ -167,7 +165,7 @@ while RUNNING:
 
     # update pygame
     py.display.flip()
-    clock.tick(60)
+    CLOCK.tick(60)
 
 
 
