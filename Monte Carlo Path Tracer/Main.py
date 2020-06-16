@@ -17,6 +17,9 @@ def renderLight():
                 # pixel color black
                 color = 0
 
+                # obtain reference pixel value
+                refValue = (referencePixels[y][x])[:3]
+
                 # calculate direct lighting
                 for source in lightSources:
                     sourceX = source.pos[0]
@@ -26,29 +29,26 @@ def renderLight():
                     directLine = Line(x, y, sourceX, sourceY)
 
                     # calculate distance from pixel to light source
-                    sourceDist = math.sqrt(((x-sourceX)**2)+((y-sourceY)**2))
+                    sourceDist = math.sqrt(((x - sourceX) ** 2)+((y - sourceY) ** 2))
 
                     # check if line segments intersect
-                    noCollision = True
+                    collision = False
                     for boundary in boundaries:
                         intersection = directLine.checkIntersection(boundary)
                         if intersection is not None:
-                            noCollision = False
+                            collision = True
                             break
 
-                    if noCollision:
+                    if not collision:
 
                         # calculate light intensity
-                        intensity = (1-(sourceDist/500))**2
-
-                        # obtain reference pixel value
-                        refValue = (referencePixels[y][x])[:3]
+                        intensity = (1 - (sourceDist / 500)) ** 2
 
                         # combine color, light source and light color
-                        refValue = refValue * intensity * light
+                        currentValue = refValue * intensity * light
 
                         # add all light sources
-                        color += refValue
+                        color += currentValue
 
                 # calculate indirect lighting with monte carlo
                 for i in range (NUM_SAMPLES):
@@ -73,23 +73,61 @@ def tracePath(ray, depth):
 
     # check if ray collisions with a light source
     for source in lightSources:
-        intersection = ray.cast(Line(source.pos[0], source.pos[1], source.pos[0], source.pos[1]))
+        intersection = ray.checkIntersection(Line(source.pos[0], source.pos[1], source.pos[0], source.pos[1]))
+        if intersection is not None:
 
+            # end if ray didnt bounce
+            if depth == 0:
+                return 0
 
+            x = int(intersection[0])
+            y = int(intersection[1])
+            distance = intersection[2]
 
-    # CHECK IF DIR HITS A LIGHT SOURCE
-    lightSource = random.randint(0,1)
-    if lightSource:
-        if depth == 0:
-            return 0
-        #ADD DISTANCE TO LIGHT SOURCE TO DISTANCE
-        intensity = (1 - (distance / 500)) ** 2
-        return values * intensity * light
-    #CHECK IF DIR HITS A SEGMENT
-    hitSegment = random.randint(0, 1)
-    if hitSegment:
-        #IF IT DOES, CREATE A NEW DIRECTION AND MODIFY VALUES AND DISTANCE
-        return tracePath(ray, depth + 1)
+            # calculate light intensity
+            intensity = (1 - (distance / 500)) ** 2
+
+            # obtain reference pixel value
+            refValue = (referencePixels[y][x])[:3]
+
+            # combine color, light source and light color
+            currentValue = refValue * intensity * light
+
+            # return pixel color
+            return currentValue
+
+    # check if ray collisions with a boundary
+    for boundary in boundaries:
+        intersection = ray.checkIntersection(boundary)
+        if intersection is not None:
+
+            x = int(intersection[0])
+            y = int(intersection[1])
+            distance = intersection[2]
+
+            # calculate light intensity
+            intensity = (1 - (distance / 500)) ** 2
+
+            # obtain reference pixel value
+            refValue = (referencePixels[y][x])[:3]
+
+            # create a new ray
+            if boundary.specular:
+                # SET THE SPECULAR ANGLE BY REPLACING THE 0
+                newRay = Ray(x, y, 0)
+            else:
+                # SET A RANDOM VALID ANGLE BY REPLACING THE 0
+                newRay = Ray(x, y, 0)
+
+            # obatin the incoming color
+            colorIncoming = tracePath(newRay, depth + 1)
+
+            # combine color, light source and light color
+            currentValue = refValue * intensity * colorIncoming
+
+            # return pixel color
+            return currentValue
+
     return 0
 
 # generate ray bouncing
@@ -137,7 +175,7 @@ boundaries = [
             Line(180, 250, 180, 135, False),
             ]
 
-# temporary utility functions
+# draw boundaries on screen
 def drawBoundaries():
     for line in boundaries:
         line.draw(WINDOW)
