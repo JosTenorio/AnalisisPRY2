@@ -184,16 +184,10 @@ def randomBounce (intersection, Line, ray):
     try:
         m = (Line.b[1] - Line.a[1]) / (Line.b[0] - Line.a [0])
         if m == 0:
-            if ray.pos [0] == intersection [0]:
-                if ray.pos[0] > intersection[0]:
-                    return Ray(intersection[0], intersection[1],random.choice([random.uniform(0, 89), random.uniform(271, 359)]))
-                else:
-                    return Ray(intersection[0], intersection[1], random.uniform(91, 269))
+            if ray.pos[1] > intersection [1]:
+                return Ray(intersection[0], intersection[1],random.uniform(1,179))
             else:
-                if ray.pos[1] > intersection [1]:
-                    return Ray(intersection[0], intersection[1],random.uniform(1,179))
-                else:
-                    return Ray(intersection[0], intersection[1],random.uniform(189,359))
+                return Ray(intersection[0], intersection[1],random.uniform(189,359))
         else:
             b = Line.b[1] - (Line.b[0] * m)
             YL = (m * ray.pos[0]) + b
@@ -208,16 +202,10 @@ def randomBounce (intersection, Line, ray):
             elif (m < 0) and (DY < 0):
                 return Ray(intersection[0], intersection[1], random.uniform(LineAngle, LineAngle + 180))
     except ZeroDivisionError:
-        if ray.pos[0] == intersection [0]:
-            if ray.pos[1] > intersection [1]:
-                return Ray(intersection[0], intersection[1],random.uniform(1,179))
-            else:
-                return Ray(intersection[0], intersection[1],random.uniform(189,359))
+        if ray.pos[0] > intersection [0]:
+            return Ray (intersection[0],intersection[1], random.choice([random.uniform(0,89),random.uniform(271,359)]))
         else:
-            if ray.pos[0] > intersection [0]:
-                return Ray (intersection[0],intersection[1], random.choice([random.uniform(0,89),random.uniform(271,359)]))
-            else:
-                return Ray(intersection[0], intersection[1],random.uniform(91,269))
+            return Ray(intersection[0], intersection[1],random.uniform(91,269))
 
 def specularBounce (intersection, line, ray):
     try:
@@ -254,12 +242,6 @@ while RUNNING:
     surface = py.surfarray.make_surface(drawingPixels)
     WINDOW.blit(surface, (0, 0))
 
-    # Ray1 = Ray(0,500,360-70)
-    # Ray1.draw(WINDOW)
-    # newLine = Line(50,250,300,250)
-    # newLine.draw(WINDOW)
-    # newRay = specularBounce (Ray1.checkIntersection(newLine), newLine,Ray1)
-    # newRay.draw(WINDOW)
     # update pygame
     py.display.flip()
     CLOCK.tick(60)
