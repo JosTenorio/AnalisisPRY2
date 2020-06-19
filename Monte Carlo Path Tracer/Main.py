@@ -6,6 +6,7 @@ from PIL import Image
 from Line import *
 from Light import *
 from Ray import *
+import time
 
 def renderLight():
     #while True:
@@ -71,7 +72,7 @@ def renderLight():
                         color += colorBleed
 
                 # average pixel value and assign
-                finalColor = color // len(lightSources) + effectiveRays
+                finalColor = color // len(lightSources) + NUM_SAMPLES
                 drawingPixels[x][y] = finalColor
 
 def tracePath(ray, depth):
@@ -139,19 +140,21 @@ def tracePath(ray, depth):
             # SET THE SPECULAR ANGLE BY REPLACING THE 0
             newRay = Ray(x, y, 0)
         else:
-            newRay = randomBounce(shortestIntersection, boundaryCollided, ray)
+            newRay = lightDirectedBounce(shortestIntersection, boundaryCollided, ray)
 
-        # obtain the incoming color
-        colorIncoming = tracePath(newRay, depth + 1)
+        if newRay is not None:
 
-        # conversion
-        colorIncomingConv = [rgb / 100 for rgb in colorIncoming]
+            # obtain the incoming color
+            colorIncoming = tracePath(newRay, depth + 1)
 
-        # combine color, light source and light color
-        currentValue = refValue * intensity * colorIncomingConv
+            # conversion
+            colorIncomingConv = [rgb / 100 for rgb in colorIncoming]
 
-        # return pixel color
-        return currentValue
+            # combine color, light source and light color
+            currentValue = refValue * intensity * colorIncomingConv
+
+            # return pixel color
+            return currentValue
 
     return BLACK
 
@@ -159,7 +162,7 @@ def tracePath(ray, depth):
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 0
+NUM_SAMPLES = 10
 MAX_DEPTH = 1
 
 # colors
@@ -330,6 +333,8 @@ def lightDirectedBounce (intersection, line, ray):
 tracerThread = threading.Thread(target = renderLight, daemon = True)
 tracerThread.start()
 
+rayG = Ray(0, 0, 270)
+
 # main loop
 while RUNNING:
 
@@ -348,6 +353,7 @@ while RUNNING:
     drawBoundaries()
     drawLightSources()
 
+    rayG.draw(WINDOW)
 
     # update pygame
     py.display.flip()
