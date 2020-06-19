@@ -9,78 +9,69 @@ from Ray import *
 import time
 
 def renderLight():
-    #while True:
 
-        # loop through all the pixels
-        for x in range (500):
-            for y in range (500):
+    # loop through all the pixels
+    for x in range (500):
+        for y in range (500):
 
-                # pixel color black
-                color = 0
+            # pixel color black
+            color = 0
 
-                # amount of rays that reached the light source
-                effectiveRays = 0
+            # obtain reference pixel value
+            refValue = (referencePixels[y][x])[:3]
 
-                # obtain reference pixel value
-                refValue = (referencePixels[y][x])[:3]
+            # calculate direct lighting
+            for source in lightSources:
+                sourceX = source.pos[0]
+                sourceY = source.pos[1]
 
-                # calculate direct lighting
-                for source in lightSources:
-                    sourceX = source.pos[0]
-                    sourceY = source.pos[1]
+                # create a line segment from pixel to light source
+                directLine = Line(x, y, sourceX, sourceY)
 
-                    # create a line segment from pixel to light source
-                    directLine = Line(x, y, sourceX, sourceY)
+                # calculate distance from pixel to light source
+                sourceDist = math.sqrt(((x - sourceX) ** 2)+((y - sourceY) ** 2))
 
-                    # calculate distance from pixel to light source
-                    sourceDist = math.sqrt(((x - sourceX) ** 2)+((y - sourceY) ** 2))
+                # check if line segments intersect
+                collision = False
+                for boundary in boundaries:
+                    intersection = directLine.checkIntersection(boundary)
+                    if intersection is not None:
+                        collision = True
+                        break
 
-                    # check if line segments intersect
-                    collision = False
-                    for boundary in boundaries:
-                        intersection = directLine.checkIntersection(boundary)
-                        if intersection is not None:
-                            collision = True
-                            break
+                if not collision:
 
-                    if not collision:
+                    # calculate light intensity
+                    intensity = (1 - (sourceDist / 500)) ** 2
 
-                        # calculate light intensity
-                        intensity = (1 - (sourceDist / 500)) ** 2
+                    # combine color, light source and light color
+                    currentValue = refValue * intensity * source.color
 
-                        # combine color, light source and light color
-                        currentValue = refValue * intensity * source.color
+                    # add all light sources
+                    color += currentValue
 
-                        # add all light sources
-                        color += currentValue
+            # calculate indirect lighting with monte carlo
+            for i in range (NUM_SAMPLES):
 
-                # calculate indirect lighting with monte carlo
-                for i in range (NUM_SAMPLES):
+                # get random direction
+                angle = random.uniform(0, 360)
 
-                    # get random direction
-                    angle = random.uniform(0, 360)
+                # create ray from pixel to random direction
+                ray = Ray(x, y, angle)
 
-                    # create ray from pixel to random direction
-                    ray = Ray(x, y, angle)
+                # calculate pixel color by tracing ray path recursively
+                color += tracePath(ray, 0)
 
-                    # calculate pixel color by tracing ray path recursively
-                    colorBleed = tracePath(ray, 0)
-
-                    # take the result into account only if it is not black
-                    if colorBleed.all():
-                        effectiveRays += 1
-                        color += colorBleed
-
-                # average pixel value and assign
-                finalColor = color // len(lightSources) + NUM_SAMPLES
-                drawingPixels[x][y] = finalColor
+            # average pixel value and assign
+            finalColor = color // len(lightSources) + NUM_SAMPLES
+            drawingPixels[x][y] = finalColor
 
 def tracePath(ray, depth):
-
+    global rayG
     # if its the last ray
     if depth >= MAX_DEPTH:
 
-        # check if ray collisions with a light source
+        # check if ray collisions with a light source, LAST RAY SHOULD ALWAYS INTERSECT LIGHT
         for source in lightSources:
             intersection = ray.checkIntersection(Line(source.pos[0], source.pos[1] - 5, source.pos[0], source.pos[1] + 5))
             if intersection is not None:
@@ -98,6 +89,8 @@ def tracePath(ray, depth):
                         break
 
                 if not collision:
+                    #rayG = ray
+                    #time.sleep(2)
 
                     # calculate light intensity
                     intensity = (1 - (distance / 500)) ** 2
@@ -125,24 +118,29 @@ def tracePath(ray, depth):
 
     if boundaryCollided is not None:
 
-        x = int(shortestIntersection[0])
-        y = int(shortestIntersection[1])
-        distance = shortestIntersection[2]
-
-        # calculate light intensity
-        intensity = (1 - (distance / 500)) ** 2
-
-        # obtain reference pixel value
-        refValue = (referencePixels[y][x])[:3]
-
         # create a new ray
         if boundaryCollided.specular:
             # SET THE SPECULAR ANGLE BY REPLACING THE 0
-            newRay = Ray(x, y, 0)
+            newRay = Ray(0, 0, 0)
         else:
-            newRay = lightDirectedBounce(shortestIntersection, boundaryCollided, ray)
+            if depth == MAX_DEPTH - 1:
+                newRay = lightDirectedBounce(shortestIntersection, boundaryCollided, ray)
+            else:
+                newRay = randomBounce(shortestIntersection, boundaryCollided, ray)
 
         if newRay is not None:
+            #rayG = ray
+            #time.sleep(2)
+
+            x = int(shortestIntersection[0])
+            y = int(shortestIntersection[1])
+            distance = shortestIntersection[2]
+
+            # calculate light intensity
+            intensity = (1 - (distance / 500)) ** 2
+
+            # obtain reference pixel value
+            refValue = (referencePixels[y][x])[:3]
 
             # obtain the incoming color
             colorIncoming = tracePath(newRay, depth + 1)
@@ -158,6 +156,68 @@ def tracePath(ray, depth):
 
     return BLACK
 
+def lightDirectedBounce(intersection, boundary, ray):
+    validSource = None
+    sourcesIndexes = list(range(0, len(lightSources)))
+    random.shuffle(sourcesIndexes)
+    for index in sourcesIndexes:
+        source = lightSources[index]
+        try:
+            m = (boundary.b[1] - boundary.a[1]) / (boundary.b[0] - boundary.a[0])
+            if m == 0:
+                if (ray.pos[1] > intersection[1] and source.pos[1] > intersection[1]) or (ray.pos[1] < intersection[1] and source.pos[1] < intersection[1]):
+                    validSource = source
+                    break
+            else:
+                b = boundary.b[1] - (boundary.b[0] * m)
+                YL = (m * ray.pos[0]) + b
+                DY = YL - ray.pos[1]
+                if ((m > 0) and (DY > 0)) or ((m < 0) and (DY > 0)):
+                    raySide = -1
+                else:
+                    raySide = 1
+                YL = (m * source.pos[0]) + b
+                DY = YL - source.pos[1]
+                if ((m > 0) and (DY > 0)) or ((m < 0) and (DY > 0)):
+                    sourceSide = -1
+                else:
+                    sourceSide = 1
+                if sourceSide == raySide:
+                    validSource = source
+                    break
+        except ZeroDivisionError:
+            if (ray.pos[0] > intersection[0] and source.pos[0] > intersection[0]) or (ray.pos[0] < intersection[0] and source.pos[0] < intersection[0]):
+                validSource = source
+                break
+    if validSource is not None:
+        rayLine = Line(intersection[0], intersection[1], validSource.pos[0], validSource.pos[1])
+        LineAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0])))
+        return Ray(intersection[0], intersection[1], LineAngle)
+    return None
+
+def randomBounce(intersection, boundary, ray):
+    try:
+        m = (boundary.b[1] - boundary.a[1]) / (boundary.b[0] - boundary.a [0])
+        if m == 0:
+            if ray.pos[1] > intersection [1]:
+                return Ray(intersection[0], intersection[1],random.uniform(1, 179))
+            else:
+                return Ray(intersection[0], intersection[1],random.uniform(189, 359))
+        else:
+            b = boundary.b[1] - (boundary.b[0] * m)
+            YL = (m * ray.pos[0]) + b
+            DY = YL - ray.pos[1]
+            LineAngle = np.rad2deg(np.arctan(m))
+            if ((m > 0) and (DY < 0)) or ((m < 0) and (DY < 0)):
+                return Ray(intersection[0], intersection[1], random.uniform(LineAngle, LineAngle + 180))
+            else:
+                return Ray(intersection[0], intersection[1], random.uniform(LineAngle, LineAngle - 180))
+    except ZeroDivisionError:
+        if ray.pos[0] > intersection[0]:
+            return Ray(intersection[0], intersection[1], random.choice([random.uniform(0, 89), random.uniform(271, 359)]))
+        else:
+            return Ray(intersection[0], intersection[1], random.uniform(91, 269))
+
 # globals
 WIDTH = 500
 HEIGHT = 500
@@ -166,8 +226,8 @@ NUM_SAMPLES = 10
 MAX_DEPTH = 1
 
 # colors
-YELLOW = np.array([1, 1, 0.75])
-BLACK = np.array([0, 0, 0])
+YELLOW = np.array([1.0, 1.0, 0.75])
+BLACK = np.array([0.0, 0.0, 0.0])
 
 # pygame setup
 py.init()
@@ -211,33 +271,6 @@ def drawBoundaries():
 def drawLightSources():
     for source in lightSources:
         source.draw(WINDOW)
-
-def randomBounce (intersection, Line, ray):
-    try:
-        m = (Line.b[1] - Line.a[1]) / (Line.b[0] - Line.a [0])
-        if m == 0:
-            if ray.pos[1] > intersection [1]:
-                return Ray(intersection[0], intersection[1],random.uniform(1,179))
-            else:
-                return Ray(intersection[0], intersection[1],random.uniform(189,359))
-        else:
-            b = Line.b[1] - (Line.b[0] * m)
-            YL = (m * ray.pos[0]) + b
-            DY = YL - ray.pos[1]
-            LineAngle = np.rad2deg(np.arctan(m))
-            if (m > 0) and (DY > 0):
-                return Ray(intersection[0], intersection[1], random.uniform(LineAngle, LineAngle - 180))
-            elif (m > 0) and (DY < 0):
-                return Ray(intersection[0], intersection[1], random.uniform(LineAngle, LineAngle + 180))
-            elif (m < 0) and (DY > 0):
-                return Ray(intersection[0], intersection[1], random.uniform(LineAngle, LineAngle - 180))
-            elif (m < 0) and (DY < 0):
-                return Ray(intersection[0], intersection[1], random.uniform(LineAngle, LineAngle + 180))
-    except ZeroDivisionError:
-        if ray.pos[0] > intersection [0]:
-            return Ray (intersection[0],intersection[1], random.choice([random.uniform(0,89),random.uniform(271,359)]))
-        else:
-            return Ray(intersection[0], intersection[1],random.uniform(91,269))
 
 def specularBounce (intersection, segment, ray):
     rayLine = Line(ray.pos[0], ray.pos[1], intersection[0], intersection[1])
@@ -285,54 +318,11 @@ def specularBounce (intersection, segment, ray):
                 bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]),(rayLine.b[0] - rayLine.a [0]))) + 180 + (2 * incidentAngle)
                 return Ray (intersection[0], intersection[1], bouncedRayAngle)
 
-def lightDirectedBounce (intersection, line, ray):
-    validSource = None
-    sourcesIndexes = list(range(0,len(lightSources)))
-    random.shuffle(sourcesIndexes)
-    for index in sourcesIndexes:
-        source = lightSources[index]
-        try:
-            m = (line.b[1] - line.a[1]) / (line.b[0] - line.a[0])
-            if m == 0:
-                if (ray.pos[1] > intersection[1] and source.pos[1] > intersection[1]) or \
-                        (ray.pos[1] < intersection[1] and source.pos[1] < intersection[1]):
-                    validSource = source
-                    break
-            else:
-                raySide = 0
-                sourceSide = 0
-                b = line.b[1] - (line.b[0] * m)
-                YL = (m * ray.pos[0]) + b
-                DY = YL - ray.pos[1]
-                if ((m > 0) and (DY > 0)) or ((m < 0) and (DY > 0)):
-                    raySide = -1
-                else:
-                    raySide = 1
-                YL = (m * source.pos[0]) + b
-                DY = YL - source.pos[1]
-                if ((m > 0) and (DY > 0)) or ((m < 0) and (DY > 0)):
-                    sourceSide = -1
-                else:
-                    sourceSide = 1
-                if sourceSide == raySide:
-                    validSource = source
-                    break
-        except ZeroDivisionError:
-            if (ray.pos[0] > intersection[0] and source.pos[0] > intersection[0]) or \
-                    (ray.pos[0] < intersection[0] and source.pos[0] < intersection[0]):
-                validSource = source
-                break
-    if validSource == None:
-        return None
-    rayLine = Line (intersection[0], intersection[1], source.pos[0], source.pos[1])
-    LineAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0])))
-    return Ray (intersection[0],intersection[1], LineAngle)
-
-
 # thread setup
 tracerThread = threading.Thread(target = renderLight, daemon = True)
 tracerThread.start()
 
+# global ray for tests
 rayG = Ray(0, 0, 270)
 
 # main loop
@@ -350,9 +340,9 @@ while RUNNING:
     surface = py.surfarray.make_surface(drawingPixels)
     WINDOW.blit(surface, (0, 0))
 
+    # tests
     drawBoundaries()
     drawLightSources()
-
     rayG.draw(WINDOW)
 
     # update pygame
