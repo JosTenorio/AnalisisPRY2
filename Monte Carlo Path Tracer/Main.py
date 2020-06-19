@@ -159,7 +159,7 @@ def tracePath(ray, depth):
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 500
+NUM_SAMPLES = 0
 MAX_DEPTH = 1
 
 # colors
