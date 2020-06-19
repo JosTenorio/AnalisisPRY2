@@ -81,7 +81,7 @@ def tracePath(ray, depth):
 
         # check if ray collisions with a light source
         for source in lightSources:
-            intersection = ray.checkIntersection(Line(source.pos[0], source.pos[1], source.pos[0], source.pos[1] + 10))
+            intersection = ray.checkIntersection(Line(source.pos[0], source.pos[1] - 5, source.pos[0], source.pos[1] + 5))
             if intersection is not None:
 
                 x = int(intersection[0])
@@ -239,7 +239,7 @@ def randomBounce (intersection, Line, ray):
 def specularBounce (intersection, line, ray):
     try:
         mline = (line.b[1] - line.a[1]) / (line.b[0] - line.a [0])
-        LineAngle = np.rad2deg(np.arctan(mline))
+        LineAngle = np.rad2deg(np.arctan2((line.b[1] - line.a[1]),(line.b[0] - line.a [0])))
         newline = Line(intersection[0], intersection[1], ray.pos[0], ray.pos[1])
         mNewLine = (newline.b[1] - newline.a[1]) / (newline.b[0] - newline.a [0])
         incidentAngle = math.atan2((mline - mNewLine), 1 + (mNewLine * mline))
@@ -251,10 +251,53 @@ def specularBounce (intersection, line, ray):
     except ZeroDivisionError:
         print ("Ray or segment are vertical")
 
+def lightDirectedBounce (intersection, line, ray):
+    validSource = None
+    sourcesIndexes = list(range(0,len(lightSources)))
+    random.shuffle(sourcesIndexes)
+    for index in sourcesIndexes:
+        source = lightSources[index]
+        try:
+            m = (line.b[1] - line.a[1]) / (line.b[0] - line.a[0])
+            if m == 0:
+                if (ray.pos[1] > intersection[1] and source.pos[1] > intersection[1]) or \
+                        (ray.pos[1] < intersection[1] and source.pos[1] < intersection[1]):
+                    validSource = source
+                    break
+            else:
+                raySide = 0
+                sourceSide = 0
+                b = line.b[1] - (line.b[0] * m)
+                YL = (m * ray.pos[0]) + b
+                DY = YL - ray.pos[1]
+                if ((m > 0) and (DY > 0)) or ((m < 0) and (DY > 0)):
+                    raySide = -1
+                else:
+                    raySide = 1
+                YL = (m * source.pos[0]) + b
+                DY = YL - source.pos[1]
+                if ((m > 0) and (DY > 0)) or ((m < 0) and (DY > 0)):
+                    sourceSide = -1
+                else:
+                    sourceSide = 1
+                if sourceSide == raySide:
+                    validSource = source
+                    break
+        except ZeroDivisionError:
+            if (ray.pos[0] > intersection[0] and source.pos[0] > intersection[0]) or \
+                    (ray.pos[0] < intersection[0] and source.pos[0] < intersection[0]):
+                validSource = source
+                break
+    if validSource == None:
+        return None
+    rayLine = Line (intersection[0], intersection[1], source.pos[0], source.pos[1])
+    LineAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0])))
+    return Ray (intersection[0],intersection[1], LineAngle)
+
 
 # thread setup
-tracerThread = threading.Thread(target = renderLight, daemon = True)
-tracerThread.start()
+#tracerThread = threading.Thread(target = renderLight, daemon = True)
+#tracerThread.start()
 
 # main loop
 while RUNNING:
@@ -271,8 +314,17 @@ while RUNNING:
     surface = py.surfarray.make_surface(drawingPixels)
     WINDOW.blit(surface, (0, 0))
 
-    drawBoundaries()
+    #drawBoundaries()
     drawLightSources()
+    ray = Ray (25,170,45)
+    line = Line (458,351,25,189)
+    line.draw(WINDOW)
+    ray.draw(WINDOW)
+    bouncedRay = lightDirectedBounce(ray.checkIntersection(line), line, ray)
+    if bouncedRay == None:
+        print ("No valid source")
+    else:
+        bouncedRay.draw(WINDOW)
 
     # update pygame
     py.display.flip()
