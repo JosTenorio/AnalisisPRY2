@@ -236,20 +236,51 @@ def randomBounce (intersection, Line, ray):
         else:
             return Ray(intersection[0], intersection[1],random.uniform(91,269))
 
-def specularBounce (intersection, line, ray):
-    try:
-        mline = (line.b[1] - line.a[1]) / (line.b[0] - line.a [0])
-        LineAngle = np.rad2deg(np.arctan2((line.b[1] - line.a[1]),(line.b[0] - line.a [0])))
-        newline = Line(intersection[0], intersection[1], ray.pos[0], ray.pos[1])
-        mNewLine = (newline.b[1] - newline.a[1]) / (newline.b[0] - newline.a [0])
-        incidentAngle = math.atan2((mline - mNewLine), 1 + (mNewLine * mline))
-        incidentAngle = np.rad2deg(incidentAngle)
-        #print ("Angulo incidente: ")
-        #print (incidentAngle)
-        result = Ray (intersection[0],intersection[1], LineAngle + incidentAngle)
-        return result
-    except ZeroDivisionError:
-        print ("Ray or segment are vertical")
+def specularBounce (intersection, segment, ray):
+    rayLine = Line(ray.pos[0], ray.pos[1], intersection[0], intersection[1])
+    segmentMDenominator = (segment.b[0] - segment.a[0])
+    segmentMNumerator = (segment.b[1] - segment.a [1])
+    segmentAngle = np.rad2deg(np.arctan2((line.b[1] - line.a[1]),(line.b[0] - line.a [0])))
+    if segmentMNumerator == 0:
+        normalM = 0
+        if (rayLine.b[0] - rayLine.a[0]) == 0:
+            incidentAngle = np.rad2deg(math.atan2(1, normalM))
+            print (incidentAngle)
+            if ray.dir[1] > 0:
+                bouncedRayAngle = (2 * incidentAngle) + 90
+                return Ray(intersection[0], intersection[1], bouncedRayAngle)
+            else:
+                bouncedRayAngle = (2 * incidentAngle) - 90
+                return Ray(intersection[0], intersection[1], bouncedRayAngle)
+        else:
+            rayLineM = (rayLine.b[1] - rayLine.a[1]) / (rayLine.b[0] - rayLine.a[0])
+            incidentAngle = np.rad2deg(math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM)))
+            bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + 180 + (2 * incidentAngle)
+            return Ray(intersection[0], intersection[1], bouncedRayAngle)
+    else:
+        rayLineMDenominator = (rayLine.b[0] - rayLine.a[0])
+        if rayLineMDenominator == 0:
+            segmentM = (segment.b[1] - segment.a[1]) / (segment.b[0] - segment.a[0])
+            normalM = -1 / segmentM
+            incidentAngle = np.rad2deg(math.atan2(1, normalM))
+            if ray.dir[0] > 0:
+                bouncedRayAngle = np.rad2deg(90 + 180 + (2 * incidentAngle))
+            else:
+                bouncedRayAngle = np.rad2deg(270 + 180 + (2 * incidentAngle))
+            return Ray(intersection[0], intersection[1], bouncedRayAngle)
+        else:
+            if segmentMDenominator == 0:
+                rayLineM = (rayLine.b[1] - rayLine.a[1]) / (rayLine.b[0] - rayLine.a[0])
+                incidentAngle = np.rad2deg(math.atan2(1, rayLineM))
+                bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + (2 * incidentAngle)
+                return Ray(intersection[0], intersection[1], bouncedRayAngle)
+            else:
+                segmentM = (segment.b[1] - segment.a[1]) / segmentMDenominator
+                normalM = -1 / segmentM
+                rayLineM = (rayLine.b[1] - rayLine.a[1]) / (rayLine.b[0] - rayLine.a [0])
+                incidentAngle = np.rad2deg(math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM)))
+                bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]),(rayLine.b[0] - rayLine.a [0]))) + 180 + (2 * incidentAngle)
+                return Ray (intersection[0], intersection[1], bouncedRayAngle)
 
 def lightDirectedBounce (intersection, line, ray):
     validSource = None
@@ -296,8 +327,8 @@ def lightDirectedBounce (intersection, line, ray):
 
 
 # thread setup
-#tracerThread = threading.Thread(target = renderLight, daemon = True)
-#tracerThread.start()
+tracerThread = threading.Thread(target = renderLight, daemon = True)
+tracerThread.start()
 
 # main loop
 while RUNNING:
@@ -314,17 +345,9 @@ while RUNNING:
     surface = py.surfarray.make_surface(drawingPixels)
     WINDOW.blit(surface, (0, 0))
 
-    #drawBoundaries()
+    drawBoundaries()
     drawLightSources()
-    ray = Ray (25,170,45)
-    line = Line (458,351,25,189)
-    line.draw(WINDOW)
-    ray.draw(WINDOW)
-    bouncedRay = lightDirectedBounce(ray.checkIntersection(line), line, ray)
-    if bouncedRay == None:
-        print ("No valid source")
-    else:
-        bouncedRay.draw(WINDOW)
+
 
     # update pygame
     py.display.flip()
