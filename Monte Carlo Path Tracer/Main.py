@@ -16,6 +16,7 @@ def renderLight():
 
             # pixel color black
             color = 0
+            effectiveRays = 0
 
             # obtain reference pixel value
             refValue = (referencePixels[y][x])[:3]
@@ -51,6 +52,7 @@ def renderLight():
                     color += currentValue
 
             # calculate indirect lighting with monte carlo
+            #print("direct light", color)
             for i in range (NUM_SAMPLES):
 
                 # get random direction
@@ -60,27 +62,33 @@ def renderLight():
                 ray = Ray(x, y, angle)
 
                 # calculate pixel color by tracing ray path recursively
-                color += tracePath(ray, 0)
+                colorBleed = tracePath(ray, 0)
+
+                # take the result into account if it wasnt black
+                if colorBleed.all():
+                    effectiveRays += 1
+                    color += colorBleed
 
             # average pixel value and assign
-            finalColor = color // len(lightSources) + NUM_SAMPLES
+            finalColor = color // (len(lightSources) + effectiveRays)
             drawingPixels[x][y] = finalColor
+            #print("final color", color, "avg", finalColor)
 
 def tracePath(ray, depth):
     global rayG
     # if its the last ray
     if depth >= MAX_DEPTH:
 
-        # check if ray collisions with a light source, LAST RAY SHOULD ALWAYS INTERSECT LIGHT
+        # check if ray collisions with a light source, LAST RAY SHOULD ALWAYS INTERSECT LIGHT, DONT NEED X AND Y INTERSECTION
         for source in lightSources:
             intersection = ray.checkIntersection(Line(source.pos[0], source.pos[1] - 5, source.pos[0], source.pos[1] + 5))
             if intersection is not None:
 
-                x = int(intersection[0])
-                y = int(intersection[1])
+                x = int(ray.pos[0])
+                y = int(ray.pos[1])
                 distance = intersection[2]
 
-                #check if ray collision with a boundary
+                #check if ray collisions with a boundary
                 collision = False
                 for boundary in boundaries:
                     intersection = ray.checkIntersection(boundary)
@@ -100,6 +108,7 @@ def tracePath(ray, depth):
 
                     # combine color, light source and light color
                     currentValue = refValue * intensity * source.color
+                    #print("bounce color", currentValue, "ref", refValue, "intensity", intensity)
 
                     # return pixel color
                     return currentValue
@@ -132,8 +141,8 @@ def tracePath(ray, depth):
             #rayG = ray
             #time.sleep(2)
 
-            x = int(shortestIntersection[0])
-            y = int(shortestIntersection[1])
+            x = int(ray.pos[0])
+            y = int(ray.pos[1])
             distance = shortestIntersection[2]
 
             # calculate light intensity
@@ -150,6 +159,7 @@ def tracePath(ray, depth):
 
             # combine color, light source and light color
             currentValue = refValue * intensity * colorIncomingConv
+            #print("resulting color", currentValue, "ref", refValue, "intensity", intensity)
 
             # return pixel color
             return currentValue
@@ -251,15 +261,15 @@ lightSources = [LightSource(195, 152, YELLOW), LightSource(305, 152, YELLOW)]
 
 # boundary positions
 boundaries = [
-            Line(180, 135, 215, 135, False),
-            Line(285, 135, 320, 135, False),
-            Line(320, 135, 320, 280, False),
-            Line(320, 320, 320, 355, False),
-            Line(320, 355, 215, 355, False),
-            Line(180, 390, 180, 286, False),
-            Line(180, 286, 140, 286, False),
-            Line(320, 320, 360, 320, False),
-            Line(180, 250, 180, 135, False),
+            Line(174, 131, 215, 131, False),
+            Line(285, 131, 325, 131, False),
+            Line(325, 131, 325, 280, False),
+            Line(325, 325, 325, 360, False),
+            Line(325, 360, 215, 360, False),
+            Line(174, 390, 174, 289, False),
+            Line(174, 289, 142, 289, False),
+            Line(325, 325, 360, 325, False),
+            Line(174, 250, 174, 131, False),
             ]
 
 # draw boundaries on screen
