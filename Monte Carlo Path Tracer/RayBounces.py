@@ -143,6 +143,5 @@ def specularNonVerticalRayDiagonalSegment (intersection, segment, rayLine, segme
     normalM = -1 / segmentM
     rayLineM = (rayLine.b[1] - rayLine.a[1]) / rayLineMDenominator
     incidentAngle = np.rad2deg(math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM)))
-    bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + 180 + (
-                2 * incidentAngle)
+    bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + 180 + (2 * incidentAngle)
     return Ray(intersection[0], intersection[1], bouncedRayAngle)

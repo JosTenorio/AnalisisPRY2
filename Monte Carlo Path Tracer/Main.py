@@ -1,7 +1,8 @@
 import sys
 import threading
+import time
 from PIL import Image
-from Bounces import *
+from RayBounces import *
 from Light import *
 
 def renderLight():
@@ -147,6 +148,8 @@ def tracePath(ray, depth):
                 newRay = randomBounce(shortestIntersection, boundaryCollided, ray)
 
         if newRay is not None:
+            # rayG = ray
+            # time.sleep(2)
 
             x = int(ray.pos[0])
             y = int(ray.pos[1])
@@ -173,7 +176,6 @@ def tracePath(ray, depth):
             return [currentValue, totalDistance, sourceColor]
 
     return [BLACK, 0, None]
-
 
 # globals
 WIDTH = 500
@@ -208,52 +210,15 @@ lightSources = [LightSource(195, 152, YELLOW), LightSource(305, 152, YELLOW)]
 
 # boundary positions
 boundaries = [
-            Line(180, 135, 215, 135, False),
-            Line(285, 135, 320, 135, False),
-            Line(320, 135, 320, 280, False),
-            Line(320, 320, 320, 355, False),
-            Line(320, 355, 215, 355, False),
-            Line(180, 390, 180, 286, False),
-            Line(180, 286, 140, 286, False),
-            Line(320, 320, 360, 320, False),
-            Line(180, 250, 180, 135, False),
-            ]
-
-# colors
-YELLOW = np.array([1.0, 1.0, 0.75])
-BLACK = np.array([0.0, 0.0, 0.0])
-
-# pygame setup
-py.init()
-WINDOW = py.display.set_mode([WIDTH, HEIGHT])
-py.display.set_caption("2D Path Tracer")
-CLOCK = py.time.Clock()
-
-# random setup
-random.seed()
-
-# black image setup
-blankImg = Image.new("RGB", (500, 500), (0, 0, 0))
-drawingPixels = np.array(blankImg)
-
-# reference image setup
-refImage = Image.open("room.png")
-referencePixels = np.array(refImage)
-
-# light positions
-lightSources = [LightSource(195, 152, YELLOW), LightSource(305, 152, YELLOW)]
-
-# boundary positions
-boundaries = [
-            Line(174, 131, 215, 131, True),
-            Line(285, 131, 325, 131, True),
-            Line(325, 131, 325, 280, True),
-            Line(325, 325, 325, 360, True),
-            Line(325, 360, 215, 360, True),
-            Line(174, 390, 174, 289, True),
-            Line(174, 289, 142, 289, True),
-            Line(325, 325, 360, 325, True),
-            Line(174, 250, 174, 131, True),
+            Line(174, 131, 215, 131, False),
+            Line(285, 131, 325, 131, False),
+            Line(325, 131, 325, 280, False),
+            Line(325, 325, 325, 360, False),
+            Line(325, 360, 215, 360, False),
+            Line(174, 390, 174, 289, False),
+            Line(174, 289, 142, 289, False),
+            Line(325, 325, 360, 325, False),
+            Line(174, 250, 174, 131, False),
             ]
 
 # draw boundaries on screen
@@ -291,6 +256,7 @@ while RUNNING:
     # tests
     drawBoundaries()
     drawLightSources()
+    rayG.draw(WINDOW)
 
     # update pygame
     py.display.flip()
