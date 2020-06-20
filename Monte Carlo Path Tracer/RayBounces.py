@@ -1,5 +1,6 @@
 from Line import *
 from Ray import *
+from Light import *
 import random
 import math
 
@@ -145,3 +146,13 @@ def specularNonVerticalRayDiagonalSegment (intersection, segment, rayLine, segme
     incidentAngle = np.rad2deg(math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM)))
     bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + 180 + (2 * incidentAngle)
     return Ray(intersection[0], intersection[1], bouncedRayAngle)
+
+def organizeLightSources(lightSources):
+    organizedSources = []
+    for source in lightSources:
+        if not source.circle:
+            organizedSources.append(LightSource(source.a[0], source.a[1], source.color))
+            organizedSources.append(LightSource(source.b[0], source.b[1], source.color))
+        else:
+            organizedSources.append(source)
+    return organizedSources

@@ -3,7 +3,6 @@ import threading
 import time
 from PIL import Image
 from RayBounces import *
-from Light import *
 
 def renderLight():
 
@@ -157,7 +156,7 @@ def tracePath(ray, depth):
             newRay = specularBounce(shortestIntersection, boundaryCollided, ray)
         else:
             if depth == MAX_DEPTH - 1:
-                newRay = lightDirectedBounce(shortestIntersection, boundaryCollided, ray, lightSources)
+                newRay = lightDirectedBounce(shortestIntersection, boundaryCollided, ray, orgLightSources)
             else:
                 newRay = randomBounce(shortestIntersection, boundaryCollided, ray)
 
@@ -195,7 +194,7 @@ def tracePath(ray, depth):
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 100
+NUM_SAMPLES = 10
 MAX_DEPTH = 1
 
 # colors
@@ -222,7 +221,8 @@ refImage = Image.open("room.png")
 referencePixels = np.array(refImage)
 
 # light positions
-lightSources = [LightSource(193, 152, YELLOW), LightSource(303, 152, YELLOW)]
+lightSources = [LightSource(193, 152, YELLOW, 193, 160), LightSource(303, 152, YELLOW, 303, 160)]
+orgLightSources = organizeLightSources(lightSources)
 
 # dynamic programing structure
 savedColors = np.zeros((500, 500, len(lightSources), 3))
