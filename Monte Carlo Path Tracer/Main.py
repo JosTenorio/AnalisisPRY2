@@ -23,14 +23,12 @@ def renderLight():
 
             # calculate direct lighting
             for source in lightSources:
-                sourceX = source.pos[0]
-                sourceY = source.pos[1]
 
                 # create a line segment from pixel to light source
-                directLine = Line(x, y, sourceX, sourceY)
+                directLine = Line(x, y, source.pos[0], source.pos[1])
 
                 # calculate distance from pixel to light source
-                sourceDist = math.sqrt(((x - sourceX) ** 2)+((y - sourceY) ** 2))
+                sourceDist = math.sqrt(((x - source.pos[0]) ** 2)+((y - source.pos[1]) ** 2))
 
                 # check if line segments intersect
                 collision = False
@@ -49,10 +47,10 @@ def renderLight():
                     currentValue = refValue * intensity * source.color
 
                     # add all light sources
+                    effectiveRays += 1
                     color += currentValue
 
             # calculate indirect lighting with monte carlo
-            #print("direct light", color)
             for i in range (NUM_SAMPLES):
 
                 # get random direction
@@ -62,24 +60,41 @@ def renderLight():
                 ray = Ray(x, y, angle)
 
                 # calculate pixel color by tracing ray path recursively
-                colorBleed = tracePath(ray, 0)
+                pathTrace = tracePath(ray, 0)
+                colorBleed = pathTrace[0]
+                totalDistance = pathTrace[1]
+                sourceColor = pathTrace[2]
 
-                # take the result into account if it wasnt black
+                # if the ray reached a light source
                 if colorBleed.all():
+
+                    # add the color bleeding
                     effectiveRays += 1
                     color += colorBleed
 
+                    # calculate light intensity
+                    intensity = (1 - (totalDistance / 500)) ** 2
+
+                    # combine color, light source and light color
+                    currentValue = refValue * intensity * sourceColor
+
+                    # add all light sources
+                    effectiveRays += 1
+                    color += currentValue
+
             # average pixel value and assign
-            finalColor = color // (len(lightSources) + effectiveRays)
+            if effectiveRays == 0:
+                finalColor = BLACK
+            else:
+                finalColor = color // effectiveRays
             drawingPixels[x][y] = finalColor
-            #print("final color", color, "avg", finalColor)
 
 def tracePath(ray, depth):
     global rayG
     # if its the last ray
     if depth >= MAX_DEPTH:
 
-        # check if ray collisions with a light source, LAST RAY SHOULD ALWAYS INTERSECT LIGHT, DONT NEED X AND Y INTERSECTION
+        # check if ray collisions with a light source, LAST RAY SHOULD ALWAYS INTERSECT LIGHT
         for source in lightSources:
             intersection = ray.checkIntersection(Line(source.pos[0], source.pos[1] - 5, source.pos[0], source.pos[1] + 5))
             if intersection is not None:
@@ -108,13 +123,11 @@ def tracePath(ray, depth):
 
                     # combine color, light source and light color
                     currentValue = refValue * intensity * source.color
-                    #print("bounce color", currentValue, "ref", refValue, "intensity", intensity)
 
-                    # return pixel color
-                    return currentValue
+                    # return pixel color and distance
+                    return [currentValue, distance, source.color]
 
-        # end if ray has bounced over the limit
-        return BLACK
+        return [BLACK, 0, None]
 
     # check if ray collisions with a boundary and find the nearest
     boundaryCollided = None
@@ -151,20 +164,21 @@ def tracePath(ray, depth):
             # obtain reference pixel value
             refValue = (referencePixels[y][x])[:3]
 
-            # obtain the incoming color
-            colorIncoming = tracePath(newRay, depth + 1)
+            # obtain the incoming color and distance
+            pathTrace = tracePath(newRay, depth + 1)
 
             # conversion
-            colorIncomingConv = [rgb / 100 for rgb in colorIncoming]
+            colorIncoming = [rgb / 100 for rgb in pathTrace[0]]
+            totalDistance = distance + pathTrace[1]
+            sourceColor = pathTrace[2]
 
             # combine color, light source and light color
-            currentValue = refValue * intensity * colorIncomingConv
-            #print("resulting color", currentValue, "ref", refValue, "intensity", intensity)
+            currentValue = refValue * intensity * colorIncoming
 
-            # return pixel color
-            return currentValue
+            # return pixel color and distance traveled
+            return [currentValue, totalDistance, sourceColor]
 
-    return BLACK
+    return [BLACK, 0, None]
 
 def lightDirectedBounce(intersection, boundary, ray):
     validSource = None
