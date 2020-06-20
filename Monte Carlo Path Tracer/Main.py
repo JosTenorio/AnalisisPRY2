@@ -156,6 +156,51 @@ def tracePath(ray, depth):
 
     return BLACK
 
+
+# globals
+WIDTH = 500
+HEIGHT = 500
+RUNNING = True
+NUM_SAMPLES = 10
+MAX_DEPTH = 1
+
+# colors
+YELLOW = np.array([1.0, 1.0, 0.75])
+BLACK = np.array([0.0, 0.0, 0.0])
+
+# pygame setup
+py.init()
+WINDOW = py.display.set_mode([WIDTH, HEIGHT])
+py.display.set_caption("2D Path Tracer")
+CLOCK = py.time.Clock()
+
+# random setup
+random.seed()
+
+# black image setup
+blankImg = Image.new("RGB", (500, 500), (0, 0, 0))
+drawingPixels = np.array(blankImg)
+
+# reference image setup
+refImage = Image.open("room.png")
+referencePixels = np.array(refImage)
+
+# light positions
+lightSources = [LightSource(195, 152, YELLOW), LightSource(305, 152, YELLOW)]
+
+# boundary positions
+boundaries = [
+            Line(180, 135, 215, 135, False),
+            Line(285, 135, 320, 135, False),
+            Line(320, 135, 320, 280, False),
+            Line(320, 320, 320, 355, False),
+            Line(320, 355, 215, 355, False),
+            Line(180, 390, 180, 286, False),
+            Line(180, 286, 140, 286, False),
+            Line(320, 320, 360, 320, False),
+            Line(180, 250, 180, 135, False),
+            ]
+
 def lightDirectedBounce(intersection, boundary, ray):
     validSource = None
     sourcesIndexes = list(range(0, len(lightSources)))
@@ -218,49 +263,6 @@ def randomBounce(intersection, boundary, ray):
         else:
             return Ray(intersection[0], intersection[1], random.uniform(91, 269))
 
-# globals
-WIDTH = 500
-HEIGHT = 500
-RUNNING = True
-NUM_SAMPLES = 10
-MAX_DEPTH = 1
-
-# colors
-YELLOW = np.array([1.0, 1.0, 0.75])
-BLACK = np.array([0.0, 0.0, 0.0])
-
-# pygame setup
-py.init()
-WINDOW = py.display.set_mode([WIDTH, HEIGHT])
-py.display.set_caption("2D Path Tracer")
-CLOCK = py.time.Clock()
-
-# random setup
-random.seed()
-
-# black image setup
-blankImg = Image.new("RGB", (500, 500), (0, 0, 0))
-drawingPixels = np.array(blankImg)
-
-# reference image setup
-refImage = Image.open("room.png")
-referencePixels = np.array(refImage)
-
-# light positions
-lightSources = [LightSource(195, 152, YELLOW), LightSource(305, 152, YELLOW)]
-
-# boundary positions
-boundaries = [
-            Line(180, 135, 215, 135, False),
-            Line(285, 135, 320, 135, False),
-            Line(320, 135, 320, 280, False),
-            Line(320, 320, 320, 355, False),
-            Line(320, 355, 215, 355, False),
-            Line(180, 390, 180, 286, False),
-            Line(180, 286, 140, 286, False),
-            Line(320, 320, 360, 320, False),
-            Line(180, 250, 180, 135, False),
-            ]
 
 # draw boundaries on screen
 def drawBoundaries():
@@ -272,55 +274,73 @@ def drawLightSources():
     for source in lightSources:
         source.draw(WINDOW)
 
+def specularVerticalRayHorizonalSegment (intersection):
+    if ray.dir[1] > 0:
+        # Ray aimed downwards
+        bouncedRayAngle = 270
+        return Ray(intersection[0], intersection[1], bouncedRayAngle)
+    else:
+        # Ray aimed upwards
+        bouncedRayAngle = 90
+        return Ray(intersection[0], intersection[1], bouncedRayAngle)
+
+def specularNonVerticalRayHorizonalSegment (intersection, rayLine):
+    rayLineM = (rayLine.b[1] - rayLine.a[1]) / (rayLine.b[0] - rayLine.a[0])
+    incidentAngle = np.rad2deg(math.atan2(1, rayLineM))
+    bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + 180 + (2 * incidentAngle)
+    return Ray(intersection[0], intersection[1], bouncedRayAngle)
+
+def specularVerticalRayNonHorizontalSegment (intersection, segmentMNumerator, segmentMDenominator):
+    segmentM = segmentMNumerator / segmentMDenominator
+    normalM = -1 / segmentM
+    incidentAngle = np.rad2deg(math.atan2(1, normalM))
+    if ray.dir[1] > 0:
+        # Ray aimed downwards
+        bouncedRayAngle = 270 - (2 * incidentAngle)
+    else:
+        # Ray aimed upwards
+        bouncedRayAngle = 90 - (2 * incidentAngle)
+    return Ray(intersection[0], intersection[1], bouncedRayAngle)
+
+def specularNonVerticalRayVerticalSegment (intersection, rayLine, rayLineMDenominator):
+    rayLineM = (rayLine.b[1] - rayLine.a[1]) / rayLineMDenominator
+    normalM = 0
+    incidentAngle = np.rad2deg(math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM)))
+    bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + 180 + (2 * incidentAngle)
+    return Ray(intersection[0], intersection[1], bouncedRayAngle)
+
+def specularNonVerticalRayDiagonalSegment (intersection, segment, rayLine, segmentMDenominator, rayLineMDenominator):
+    segmentM = (segment.b[1] - segment.a[1]) / segmentMDenominator
+    normalM = -1 / segmentM
+    rayLineM = (rayLine.b[1] - rayLine.a[1]) / rayLineMDenominator
+    incidentAngle = np.rad2deg(math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM)))
+    bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + 180 + (
+                2 * incidentAngle)
+    return Ray(intersection[0], intersection[1], bouncedRayAngle)
+
 def specularBounce (intersection, segment, ray):
     rayLine = Line(ray.pos[0], ray.pos[1], intersection[0], intersection[1])
-    segmentMDenominator = (segment.b[0] - segment.a[0])
     segmentMNumerator = (segment.b[1] - segment.a [1])
-    segmentAngle = np.rad2deg(np.arctan2((line.b[1] - line.a[1]),(line.b[0] - line.a [0])))
+    rayLineMDenominator = (rayLine.b[0] - rayLine.a[0])
     if segmentMNumerator == 0:
-        normalM = 0
-        if (rayLine.b[0] - rayLine.a[0]) == 0:
-            incidentAngle = np.rad2deg(math.atan2(1, normalM))
-            print (incidentAngle)
-            if ray.dir[1] > 0:
-                bouncedRayAngle = (2 * incidentAngle) + 90
-                return Ray(intersection[0], intersection[1], bouncedRayAngle)
-            else:
-                bouncedRayAngle = (2 * incidentAngle) - 90
-                return Ray(intersection[0], intersection[1], bouncedRayAngle)
-        else:
-            rayLineM = (rayLine.b[1] - rayLine.a[1]) / (rayLine.b[0] - rayLine.a[0])
-            incidentAngle = np.rad2deg(math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM)))
-            bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + 180 + (2 * incidentAngle)
-            return Ray(intersection[0], intersection[1], bouncedRayAngle)
-    else:
-        rayLineMDenominator = (rayLine.b[0] - rayLine.a[0])
         if rayLineMDenominator == 0:
-            segmentM = (segment.b[1] - segment.a[1]) / (segment.b[0] - segment.a[0])
-            normalM = -1 / segmentM
-            incidentAngle = np.rad2deg(math.atan2(1, normalM))
-            if ray.dir[0] > 0:
-                bouncedRayAngle = np.rad2deg(90 + 180 + (2 * incidentAngle))
-            else:
-                bouncedRayAngle = np.rad2deg(270 + 180 + (2 * incidentAngle))
-            return Ray(intersection[0], intersection[1], bouncedRayAngle)
+            bouncedRay = specularVerticalRayHorizonalSegment(intersection)
+        else:
+            bouncedRay = specularNonVerticalRayHorizonalSegment (intersection, rayLine)
+    else:
+        segmentMDenominator = (segment.b[0] - segment.a[0])
+        if rayLineMDenominator == 0:
+            bouncedRay = specularVerticalRayNonHorizontalSegment(intersection, segmentMNumerator, segmentMDenominator)
         else:
             if segmentMDenominator == 0:
-                rayLineM = (rayLine.b[1] - rayLine.a[1]) / (rayLine.b[0] - rayLine.a[0])
-                incidentAngle = np.rad2deg(math.atan2(1, rayLineM))
-                bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + (2 * incidentAngle)
-                return Ray(intersection[0], intersection[1], bouncedRayAngle)
+                bouncedRay = specularNonVerticalRayVerticalSegment(intersection, rayLine, rayLineMDenominator)
             else:
-                segmentM = (segment.b[1] - segment.a[1]) / segmentMDenominator
-                normalM = -1 / segmentM
-                rayLineM = (rayLine.b[1] - rayLine.a[1]) / (rayLine.b[0] - rayLine.a [0])
-                incidentAngle = np.rad2deg(math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM)))
-                bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]),(rayLine.b[0] - rayLine.a [0]))) + 180 + (2 * incidentAngle)
-                return Ray (intersection[0], intersection[1], bouncedRayAngle)
+                bouncedRay = specularNonVerticalRayDiagonalSegment(intersection, segment, rayLine, segmentMDenominator,rayLineMDenominator)
+    return bouncedRay
 
 # thread setup
-tracerThread = threading.Thread(target = renderLight, daemon = True)
-tracerThread.start()
+# tracerThread = threading.Thread(target = renderLight, daemon = True)
+# tracerThread.start()
 
 # global ray for tests
 rayG = Ray(0, 0, 270)
@@ -340,10 +360,16 @@ while RUNNING:
     surface = py.surfarray.make_surface(drawingPixels)
     WINDOW.blit(surface, (0, 0))
 
+    ray = Ray (500,400,180)
+    ray.draw(WINDOW)
+    line = Line (400,500,400,250)
+    line.draw(WINDOW)
+    if ray.checkIntersection(line) is not None:
+        specularBounce(ray.checkIntersection(line), line, ray).draw(WINDOW)
     # tests
-    drawBoundaries()
-    drawLightSources()
-    rayG.draw(WINDOW)
+    # drawBoundaries()
+    # drawLightSources()
+    # rayG.draw(WINDOW)
 
     # update pygame
     py.display.flip()
