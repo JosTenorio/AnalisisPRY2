@@ -1,47 +1,26 @@
 from Line import *
-from Light import *
 from Ray import *
 import random
 import math
 
 def lightDirectedBounce(intersection, boundary, ray, lightSources):
-    validSource = None
     sourcesIndexes = list(range(0, len(lightSources)))
     random.shuffle(sourcesIndexes)
-    for index in sourcesIndexes:
-        source = lightSources[index]
-        try:
-            m = (boundary.b[1] - boundary.a[1]) / (boundary.b[0] - boundary.a[0])
-            if m == 0:
-                if (ray.pos[1] > intersection[1] and source.pos[1] > intersection[1]) or (ray.pos[1] < intersection[1] and source.pos[1] < intersection[1]):
-                    validSource = source
-                    break
-            else:
-                b = boundary.b[1] - (boundary.b[0] * m)
-                YL = (m * ray.pos[0]) + b
-                DY = YL - ray.pos[1]
-                if ((m > 0) and (DY > 0)) or ((m < 0) and (DY > 0)):
-                    raySide = -1
-                else:
-                    raySide = 1
-                YL = (m * source.pos[0]) + b
-                DY = YL - source.pos[1]
-                if ((m > 0) and (DY > 0)) or ((m < 0) and (DY > 0)):
-                    sourceSide = -1
-                else:
-                    sourceSide = 1
-                if sourceSide == raySide:
-                    validSource = source
-                    break
-        except ZeroDivisionError:
-            if (ray.pos[0] > intersection[0] and source.pos[0] > intersection[0]) or (ray.pos[0] < intersection[0] and source.pos[0] < intersection[0]):
-                validSource = source
-                break
+    mDenominator = (boundary.b[0] - boundary.a[0])
+    if mDenominator != 0:
+        mNumerator = (boundary.b[1] - boundary.a[1])
+        if mNumerator == 0:
+            validSource = directedHorizontalSegment(intersection, ray, sourcesIndexes, lightSources)
+        else:
+            m = mNumerator / mDenominator
+            validSource = directedDiagonalSegment (ray, sourcesIndexes, lightSources, m, boundary)
+    else:
+        validSource = directedVerticalSegment(intersection, ray, sourcesIndexes, lightSources)
     if validSource is not None:
-        rayLine = Line(intersection[0], intersection[1], validSource.pos[0], validSource.pos[1])
-        LineAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0])))
+        LineAngle = np.rad2deg(np.arctan2((validSource.pos[1] - intersection[1]), (validSource.pos[0] - intersection[0])))
         return Ray(intersection[0], intersection[1], LineAngle)
-    return None
+    else:
+        return None
 
 def randomBounce(intersection, boundary, ray):
     mDenominator = (boundary.b[0] - boundary.a [0])
@@ -75,6 +54,34 @@ def specularBounce (intersection, segment, ray):
             else:
                 bouncedRay = specularNonVerticalRayDiagonalSegment(intersection, segment, rayLine, segmentMDenominator,rayLineMDenominator)
     return bouncedRay
+
+def directedDiagonalSegment (ray, sourcesIndexes, lightSources, m, boundary):
+    for index in sourcesIndexes:
+        source = lightSources[index]
+        b = boundary.b[1] - (boundary.b[0] * m)
+        YL = (m * ray.pos[0]) + b
+        DY = YL - ray.pos[1]
+        raySide = (((m > 0) and (DY > 0)) or ((m < 0) and (DY > 0)))
+        YL = (m * source.pos[0]) + b
+        DY = YL - source.pos[1]
+        sourceSide = (((m > 0) and (DY > 0)) or ((m < 0) and (DY > 0)))
+        if sourceSide == raySide:
+            return source
+    return None
+
+def directedHorizontalSegment (intersection, ray, sourcesIndexes, lightSources):
+    for index in sourcesIndexes:
+        source = lightSources[index]
+        if (ray.pos[1] > intersection[1] and source.pos[1] > intersection[1]) or (ray.pos[1] < intersection[1] and source.pos[1] < intersection[1]):
+            return source
+    return None
+
+def directedVerticalSegment (intersection, ray, sourcesIndexes, lightSources):
+    for index in sourcesIndexes:
+        source = lightSources[index]
+        if (ray.pos[0] > intersection[0] and source.pos[0] > intersection[0]) or (ray.pos[0] < intersection[0] and source.pos[0] < intersection[0]):
+            return source
+    return None
 
 def randomHorizontalSegment (intersection, ray):
     if ray.pos[1] > intersection[1]:

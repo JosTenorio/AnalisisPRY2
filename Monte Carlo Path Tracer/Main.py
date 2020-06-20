@@ -2,6 +2,7 @@ import sys
 import threading
 from PIL import Image
 from Bounces import *
+from Light import *
 
 def renderLight():
 
