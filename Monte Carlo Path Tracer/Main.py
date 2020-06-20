@@ -93,7 +93,7 @@ def tracePath(ray, depth):
 
         # check if ray collisions with a light source, LAST RAY SHOULD ALWAYS INTERSECT LIGHT
         for source in lightSources:
-            intersection = ray.checkIntersection(Line(source.pos[0], source.pos[1] - 5, source.pos[0], source.pos[1] + 5))
+            intersection = ray.checkIntersection(source)
             if intersection is not None:
 
                 x = int(ray.pos[0])
@@ -206,7 +206,7 @@ refImage = Image.open("room.png")
 referencePixels = np.array(refImage)
 
 # light positions
-lightSources = [LightSource(195, 152, YELLOW), LightSource(305, 152, YELLOW)]
+lightSources = [LightSource(193, 152, YELLOW), LightSource(303, 152, YELLOW)]
 
 # boundary positions
 boundaries = [

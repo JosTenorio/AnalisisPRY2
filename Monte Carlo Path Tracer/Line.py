@@ -9,9 +9,9 @@ class Line:
 
     def draw(self, window):
         if self.specular:
-            py.draw.line(window, (255, 0, 0), self.a, self.b, 2)
+            py.draw.line(window, (120, 180, 255), self.a, self.b, 2)
         else:
-            py.draw.line(window, (255, 255, 255), self.a, self.b, 2)
+            py.draw.line(window, (128, 128, 128), self.a, self.b, 2)
 
     def checkIntersection(self, line):
         x1 = line.a[0]

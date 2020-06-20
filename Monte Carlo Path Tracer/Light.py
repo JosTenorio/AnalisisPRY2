@@ -2,9 +2,19 @@ import pygame as py
 
 class LightSource:
 
-    def __init__(self, x, y, color):
-        self.pos = [x, y]
+    def __init__(self, x1, y1, color, x2 = -1, y2 = -1):
+        self.pos = [x1, y1]
+        self.a = [x1, y1]
+        if x2 == -1 or y2 == -1:
+            self.circle = True
+            self.b = [x1, y1 + 1]
+        else:
+            self.circle = False
+            self.b = [x2, y2]
         self.color = color
 
     def draw(self, window):
-        py.draw.circle(window, (255, 255, 255), self.pos, 2)
+        if self.circle:
+            py.draw.circle(window, [x * 100 for x in self.color], self.pos, 2)
+        else:
+            py.draw.line(window, [x * 100 for x in self.color], self.a, self.b, 2)
