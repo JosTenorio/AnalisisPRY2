@@ -8,7 +8,10 @@ class Line:
         self.specular = specular
 
     def draw(self, window):
-        py.draw.line(window, (255, 255, 255), self.a, self.b, 2)
+        if self.specular:
+            py.draw.line(window, (255, 0, 0), self.a, self.b, 2)
+        else:
+            py.draw.line(window, (255, 255, 255), self.a, self.b, 2)
 
     def checkIntersection(self, line):
         x1 = line.a[0]
