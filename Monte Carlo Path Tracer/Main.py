@@ -16,20 +16,19 @@ def renderLight():
 
             # pixel color black
             color = 0
+            effectiveRays = 0
 
             # obtain reference pixel value
             refValue = (referencePixels[y][x])[:3]
 
             # calculate direct lighting
             for source in lightSources:
-                sourceX = source.pos[0]
-                sourceY = source.pos[1]
 
                 # create a line segment from pixel to light source
-                directLine = Line(x, y, sourceX, sourceY)
+                directLine = Line(x, y, source.pos[0], source.pos[1])
 
                 # calculate distance from pixel to light source
-                sourceDist = math.sqrt(((x - sourceX) ** 2)+((y - sourceY) ** 2))
+                sourceDist = math.sqrt(((x - source.pos[0]) ** 2)+((y - source.pos[1]) ** 2))
 
                 # check if line segments intersect
                 collision = False
@@ -48,6 +47,7 @@ def renderLight():
                     currentValue = refValue * intensity * source.color
 
                     # add all light sources
+                    effectiveRays += 1
                     color += currentValue
 
             # calculate indirect lighting with monte carlo
@@ -60,10 +60,33 @@ def renderLight():
                 ray = Ray(x, y, angle)
 
                 # calculate pixel color by tracing ray path recursively
-                color += tracePath(ray, 0)
+                pathTrace = tracePath(ray, 0)
+                colorBleed = pathTrace[0]
+                totalDistance = pathTrace[1]
+                sourceColor = pathTrace[2]
+
+                # if the ray reached a light source
+                if colorBleed.all():
+
+                    # add the color bleeding
+                    effectiveRays += 1
+                    color += colorBleed
+
+                    # calculate light intensity
+                    intensity = (1 - (totalDistance / 500)) ** 2
+
+                    # combine color, light source and light color
+                    currentValue = refValue * intensity * sourceColor
+
+                    # add all light sources
+                    effectiveRays += 1
+                    color += currentValue
 
             # average pixel value and assign
-            finalColor = color // len(lightSources) + NUM_SAMPLES
+            if effectiveRays == 0:
+                finalColor = BLACK
+            else:
+                finalColor = color // effectiveRays
             drawingPixels[x][y] = finalColor
 
 def tracePath(ray, depth):
@@ -76,11 +99,11 @@ def tracePath(ray, depth):
             intersection = ray.checkIntersection(Line(source.pos[0], source.pos[1] - 5, source.pos[0], source.pos[1] + 5))
             if intersection is not None:
 
-                x = int(intersection[0])
-                y = int(intersection[1])
+                x = int(ray.pos[0])
+                y = int(ray.pos[1])
                 distance = intersection[2]
 
-                #check if ray collision with a boundary
+                #check if ray collisions with a boundary
                 collision = False
                 for boundary in boundaries:
                     intersection = ray.checkIntersection(boundary)
@@ -101,11 +124,10 @@ def tracePath(ray, depth):
                     # combine color, light source and light color
                     currentValue = refValue * intensity * source.color
 
-                    # return pixel color
-                    return currentValue
+                    # return pixel color and distance
+                    return [currentValue, distance, source.color]
 
-        # end if ray has bounced over the limit
-        return BLACK
+        return [BLACK, 0, None]
 
     # check if ray collisions with a boundary and find the nearest
     boundaryCollided = None
@@ -132,8 +154,8 @@ def tracePath(ray, depth):
             #rayG = ray
             #time.sleep(2)
 
-            x = int(shortestIntersection[0])
-            y = int(shortestIntersection[1])
+            x = int(ray.pos[0])
+            y = int(ray.pos[1])
             distance = shortestIntersection[2]
 
             # calculate light intensity
@@ -142,19 +164,21 @@ def tracePath(ray, depth):
             # obtain reference pixel value
             refValue = (referencePixels[y][x])[:3]
 
-            # obtain the incoming color
-            colorIncoming = tracePath(newRay, depth + 1)
+            # obtain the incoming color and distance
+            pathTrace = tracePath(newRay, depth + 1)
 
             # conversion
-            colorIncomingConv = [rgb / 100 for rgb in colorIncoming]
+            colorIncoming = [rgb / 100 for rgb in pathTrace[0]]
+            totalDistance = distance + pathTrace[1]
+            sourceColor = pathTrace[2]
 
             # combine color, light source and light color
-            currentValue = refValue * intensity * colorIncomingConv
+            currentValue = refValue * intensity * colorIncoming
 
-            # return pixel color
-            return currentValue
+            # return pixel color and distance traveled
+            return [currentValue, totalDistance, sourceColor]
 
-    return BLACK
+    return [BLACK, 0, None]
 
 
 # globals
@@ -263,6 +287,43 @@ def randomBounce(intersection, boundary, ray):
         else:
             return Ray(intersection[0], intersection[1], random.uniform(91, 269))
 
+
+# colors
+YELLOW = np.array([1.0, 1.0, 0.75])
+BLACK = np.array([0.0, 0.0, 0.0])
+
+# pygame setup
+py.init()
+WINDOW = py.display.set_mode([WIDTH, HEIGHT])
+py.display.set_caption("2D Path Tracer")
+CLOCK = py.time.Clock()
+
+# random setup
+random.seed()
+
+# black image setup
+blankImg = Image.new("RGB", (500, 500), (0, 0, 0))
+drawingPixels = np.array(blankImg)
+
+# reference image setup
+refImage = Image.open("room.png")
+referencePixels = np.array(refImage)
+
+# light positions
+lightSources = [LightSource(195, 152, YELLOW), LightSource(305, 152, YELLOW)]
+
+# boundary positions
+boundaries = [
+            Line(174, 131, 215, 131, False),
+            Line(285, 131, 325, 131, False),
+            Line(325, 131, 325, 280, False),
+            Line(325, 325, 325, 360, False),
+            Line(325, 360, 215, 360, False),
+            Line(174, 390, 174, 289, False),
+            Line(174, 289, 142, 289, False),
+            Line(325, 325, 360, 325, False),
+            Line(174, 250, 174, 131, False),
+            ]
 
 # draw boundaries on screen
 def drawBoundaries():
