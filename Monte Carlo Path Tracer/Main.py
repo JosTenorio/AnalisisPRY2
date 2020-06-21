@@ -217,7 +217,7 @@ blankImg = Image.new("RGB", (500, 500), (0, 0, 0))
 drawingPixels = np.array(blankImg)
 
 # reference image setup
-refImage = Image.open("room.png")
+refImage = Image.open("Room.png")
 referencePixels = np.array(refImage)
 
 # light positions
