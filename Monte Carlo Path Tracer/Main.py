@@ -5,10 +5,11 @@ from PIL import Image
 from RayBounces import *
 
 def renderLight():
-
+    # global rayG
+    # global lineG
     # loop through all the pixels
-    for x in range (500):
-        for y in range (500):
+    for x in range (0, 500):
+        for y in range (0, 500):
 
             # pixel color black
             color = 0
@@ -42,7 +43,7 @@ def renderLight():
                             break
 
                     if not collision:
-
+                        # lineG = directLine
                         # calculate light intensity
                         intensity = (1 - (sourceDist / 500)) ** 2
 
@@ -61,6 +62,8 @@ def renderLight():
 
                 # create ray from pixel to random direction
                 ray = Ray(x, y, angle)
+                # rayG = ray
+                # time.sleep(10)
 
                 # calculate pixel color by tracing ray path recursively
                 pathTrace = tracePath(ray, 0)
@@ -120,7 +123,7 @@ def tracePath(ray, depth):
                         break
 
                 if not collision:
-                    #rayG = ray
+                    # rayG = ray
                     #time.sleep(2)
 
                     # calculate light intensity
@@ -162,7 +165,7 @@ def tracePath(ray, depth):
 
         if newRay is not None:
             #rayG = ray
-            #time.sleep(2)
+            #time.sleep(10)
 
             x = int(ray.pos[0])
             y = int(ray.pos[1])
@@ -269,7 +272,8 @@ tracerThread = threading.Thread(target = renderLight, daemon = True)
 tracerThread.start()
 
 # global ray for tests
-rayG = Ray(0, 0, 270)
+rayG = Ray(490,180, np.deg2rad(260))
+lineG = boundaries[10]
 
 # main loop
 while RUNNING:
@@ -282,6 +286,7 @@ while RUNNING:
     # set screen to white
     WINDOW.fill((255, 255, 255))
 
+
     # convert drawing image to surface and set to screen
     surface = py.surfarray.make_surface(drawingPixels)
     WINDOW.blit(surface, (0, 0))
@@ -289,7 +294,10 @@ while RUNNING:
     # tests
     drawBoundaries()
     drawLightSources()
-    # rayG.draw(WINDOW)
+    #rayG.draw(WINDOW)
+    #lineG.draw(WINDOW)
+
+
 
     # update pygame
     py.display.flip()
