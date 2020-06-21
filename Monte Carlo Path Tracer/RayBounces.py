@@ -18,7 +18,7 @@ def lightDirectedBounce(intersection, boundary, ray, lightSources):
     else:
         validSource = directedVerticalSegment(intersection, ray, sourcesIndexes, lightSources)
     if validSource is not None:
-        LineAngle = np.rad2deg(np.arctan2((validSource.pos[1] - intersection[1]), (validSource.pos[0] - intersection[0])))
+        LineAngle = np.arctan2((validSource.pos[1] - intersection[1]), (validSource.pos[0] - intersection[0]))
         return Ray(intersection[0], intersection[1], LineAngle)
     else:
         return None
@@ -86,65 +86,65 @@ def directedVerticalSegment (intersection, ray, sourcesIndexes, lightSources):
 
 def randomHorizontalSegment (intersection, ray):
     if ray.pos[1] > intersection[1]:
-        bouncedRayAngle = random.uniform(1, 179)
+        bouncedRayAngle = random.uniform(math.pi / 180, math.pi)
     else:
-        bouncedRayAngle = random.uniform(189, 359)
+        bouncedRayAngle = random.uniform(181 * math.pi / 180, 2 * math.pi)
     return Ray(intersection[0], intersection[1],bouncedRayAngle)
 
 def randomDiagonalSegment (intersection, boundary, ray, m):
     b = boundary.b[1] - (boundary.b[0] * m)
     YL = (m * ray.pos[0]) + b
     DY = YL - ray.pos[1]
-    LineAngle = np.rad2deg(np.arctan(m))
+    LineAngle = np.arctan(m)
     if ((m > 0) and (DY < 0)) or ((m < 0) and (DY < 0)):
-        bouncedRayAngle = random.uniform(LineAngle, LineAngle + 180)
+        bouncedRayAngle = random.uniform(LineAngle + (math.pi / 180), LineAngle + math.pi)
     else:
-        bouncedRayAngle = random.uniform(LineAngle, LineAngle - 180)
+        bouncedRayAngle = random.uniform(LineAngle - (math.pi / 180), LineAngle - math.pi)
     return Ray(intersection[0], intersection[1], bouncedRayAngle)
 
 def randomVerticalSegment (intersection, ray):
     if ray.pos[0] > intersection[0]:
-        bouncedRayAngle = random.choice([random.uniform(0, 89), random.uniform(271, 359)])
+        bouncedRayAngle = random.choice([random.uniform(math.pi / 180, math.pi / 2), random.uniform(3 * math.pi / 2, 2 * math.pi)])
     else:
-        bouncedRayAngle = random.uniform(91, 269)
+        bouncedRayAngle = random.uniform(91 * math.pi / 180, 3 * math.pi / 2)
     return Ray(intersection[0], intersection[1], bouncedRayAngle)
 
 def specularVerticalRayHorizonalSegment (intersection, ray):
     if ray.dir[1] > 0:
-        bouncedRayAngle = 270
+        bouncedRayAngle = 3 * math.pi / 2
     else:
-        bouncedRayAngle = 90
+        bouncedRayAngle = math.pi / 2
     return Ray(intersection[0], intersection[1], bouncedRayAngle)
 
 def specularNonVerticalRayHorizonalSegment (intersection, rayLine):
     rayLineM = (rayLine.b[1] - rayLine.a[1]) / (rayLine.b[0] - rayLine.a[0])
-    incidentAngle = np.rad2deg(math.atan2(1, rayLineM))
-    bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + 180 + (2 * incidentAngle)
+    incidentAngle = math.atan2(1, rayLineM)
+    bouncedRayAngle = np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0])) + math.pi + (2 * incidentAngle)
     return Ray(intersection[0], intersection[1], bouncedRayAngle)
 
 def specularVerticalRayNonHorizontalSegment (intersection, segmentMNumerator, segmentMDenominator, ray):
     segmentM = segmentMNumerator / segmentMDenominator
     normalM = -1 / segmentM
-    incidentAngle = np.rad2deg(math.atan2(1, normalM))
+    incidentAngle = math.atan2(1, normalM)
     if ray.dir[1] > 0:
-        bouncedRayAngle = 270 - (2 * incidentAngle)
+        bouncedRayAngle = (3 * math.pi / 2) - (2 * incidentAngle)
     else:
-        bouncedRayAngle = 90 - (2 * incidentAngle)
+        bouncedRayAngle = (math.pi / 2) - (2 * incidentAngle)
     return Ray(intersection[0], intersection[1], bouncedRayAngle)
 
 def specularNonVerticalRayVerticalSegment (intersection, rayLine, rayLineMDenominator):
     rayLineM = (rayLine.b[1] - rayLine.a[1]) / rayLineMDenominator
     normalM = 0
-    incidentAngle = np.rad2deg(math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM)))
-    bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + 180 + (2 * incidentAngle)
+    incidentAngle = math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM))
+    bouncedRayAngle = np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0])) + math.pi + (2 * incidentAngle)
     return Ray(intersection[0], intersection[1], bouncedRayAngle)
 
 def specularNonVerticalRayDiagonalSegment (intersection, segment, rayLine, segmentMDenominator, rayLineMDenominator):
     segmentM = (segment.b[1] - segment.a[1]) / segmentMDenominator
     normalM = -1 / segmentM
     rayLineM = (rayLine.b[1] - rayLine.a[1]) / rayLineMDenominator
-    incidentAngle = np.rad2deg(math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM)))
-    bouncedRayAngle = np.rad2deg(np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0]))) + 180 + (2 * incidentAngle)
+    incidentAngle = math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM))
+    bouncedRayAngle = np.arctan2((rayLine.b[1] - rayLine.a[1]), (rayLine.b[0] - rayLine.a[0])) + math.pi + (2 * incidentAngle)
     return Ray(intersection[0], intersection[1], bouncedRayAngle)
 
 def organizeLightSources(lightSources):

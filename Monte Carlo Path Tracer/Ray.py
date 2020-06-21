@@ -5,8 +5,7 @@ class Ray:
 
     def __init__(self, x, y, angle):
         self.pos = [x, y]
-        radians = np.deg2rad(angle)
-        self.dir = [np.cos(radians), np.sin(radians)]
+        self.dir = [np.cos(angle), np.sin(angle)]
 
     def draw(self, window):
         py.draw.line(window, (255, 255, 255), self.pos, np.add(self.pos, [x * 150 for x in self.dir]), 1)

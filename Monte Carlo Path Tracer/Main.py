@@ -57,7 +57,7 @@ def renderLight():
             for i in range (NUM_SAMPLES):
 
                 # get random direction
-                angle = random.uniform(0, 360)
+                angle = random.uniform(0, 2 * PI)
 
                 # create ray from pixel to random direction
                 ray = Ray(x, y, angle)
@@ -194,14 +194,18 @@ def tracePath(ray, depth):
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 10
+NUM_SAMPLES = 50
 MAX_DEPTH = 1
+
 
 # colors
 YELLOW = np.array([1.0, 1.0, 0.75])
 BLACK = np.array([0.0, 0.0, 0.0])
 RED = np.array([1.0, 0.0, 0.0])
 BLUE = np.array([0.0, 0.0, 1.0])
+
+# definitions
+PI = math.pi
 
 # pygame setup
 py.init()
@@ -217,7 +221,7 @@ blankImg = Image.new("RGB", (500, 500), (0, 0, 0))
 drawingPixels = np.array(blankImg)
 
 # reference image setup
-refImage = Image.open("Room.png")
+refImage = Image.open("room.png")
 referencePixels = np.array(refImage)
 
 # light positions
@@ -275,7 +279,7 @@ while RUNNING:
     # tests
     drawBoundaries()
     drawLightSources()
-    rayG.draw(WINDOW)
+    # rayG.draw(WINDOW)
 
     # update pygame
     py.display.flip()
