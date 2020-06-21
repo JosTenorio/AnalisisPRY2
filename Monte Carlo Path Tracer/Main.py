@@ -178,7 +178,7 @@ def tracePath(ray, depth):
             pathTrace = tracePath(newRay, depth + 1)
 
             # conversion
-            colorIncoming = [rgb / 100 for rgb in pathTrace[0]]
+            colorIncoming = [rgb / 255 for rgb in pathTrace[0]]
             totalDistance = distance + pathTrace[1]
             sourceColor = pathTrace[2]
 
@@ -194,11 +194,12 @@ def tracePath(ray, depth):
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 10
+NUM_SAMPLES = 50
 MAX_DEPTH = 1
 
 # colors
 YELLOW = np.array([1.0, 1.0, 0.75])
+ORANGE = np.array([1.0, 0.9, 0.5])
 BLACK = np.array([0.0, 0.0, 0.0])
 RED = np.array([1.0, 0.0, 0.0])
 BLUE = np.array([0.0, 0.0, 1.0])
@@ -221,7 +222,11 @@ refImage = Image.open("Room.png")
 referencePixels = np.array(refImage)
 
 # light positions
-lightSources = [LightSource(193, 152, YELLOW, 193, 160), LightSource(303, 152, YELLOW, 303, 160)]
+lightSources = [
+    LightSource(185, 132, YELLOW),
+    LightSource(315, 132, YELLOW),
+    LightSource(435, 28, ORANGE, 485, 28)
+    ]
 orgLightSources = organizeLightSources(lightSources)
 
 # dynamic programing structure
@@ -229,16 +234,21 @@ savedColors = np.zeros((500, 500, len(lightSources), 3))
 
 # boundary positions
 boundaries = [
-            Line(174, 131, 215, 131, False),
-            Line(285, 131, 325, 131, False),
-            Line(325, 131, 325, 280, False),
-            Line(325, 325, 325, 360, False),
-            Line(325, 360, 215, 360, False),
-            Line(174, 390, 174, 289, False),
-            Line(174, 289, 142, 289, False),
-            Line(325, 325, 360, 325, False),
-            Line(174, 250, 174, 131, False),
-            ]
+    Line(155, 100, 155, 215, False),
+    Line(155, 100, 210, 100, False),
+    Line(210, 100, 210, 0, False),
+    Line(290, 100, 290, 0, False),
+    Line(92, 286, 155, 286, False),
+    Line(155, 286, 155, 425, False),
+    Line(345, 100, 345, 290, False),
+    Line(290, 100, 345, 100, False),
+    Line(235, 380, 235, 499, False),
+    Line(345, 155, 442, 155, True),
+    Line(442, 155, 499, 155, False),
+    Line(258, 370, 268, 360, False),
+    Line(285, 343, 295, 333, False),
+    Line(311, 318, 321, 308, False)
+    ]
 
 # draw boundaries on screen
 def drawBoundaries():
