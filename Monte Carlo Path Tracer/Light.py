@@ -15,6 +15,6 @@ class LightSource:
 
     def draw(self, window):
         if self.circle:
-            py.draw.circle(window, [x * 100 for x in self.color], self.pos, 2)
+            py.draw.circle(window, [x * 255 for x in self.color], self.pos, 5)
         else:
-            py.draw.line(window, [x * 100 for x in self.color], self.a, self.b, 2)
+            py.draw.line(window, [x * 255 for x in self.color], self.a, self.b, 5)
