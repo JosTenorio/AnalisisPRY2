@@ -56,6 +56,11 @@ def specularBounce (intersection, segment, ray):
                 bouncedRay = specularNonVerticalRayDiagonalSegment(intersection, segment, rayLine, segmentMDenominator,rayLineMDenominator)
     return bouncedRay
 
+def refractiveBouce(intersection, segment, ray):
+    bouncedRay = Ray(intersection[0], intersection[1], 0)
+    bouncedRay.dir = ray.dir
+    return bouncedRay
+
 def directedDiagonalSegment (ray, sourcesIndexes, lightSources, m, boundary):
     for index in sourcesIndexes:
         source = lightSources[index]

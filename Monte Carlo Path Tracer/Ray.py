@@ -8,7 +8,7 @@ class Ray:
         self.dir = [np.cos(angle), np.sin(angle)]
 
     def draw(self, window):
-        py.draw.line(window, (255, 255, 255), self.pos, np.add(self.pos, [x * 150 for x in self.dir]), 1)
+        py.draw.line(window, (255, 255, 255), self.pos, np.add(self.pos, [x * 100 for x in self.dir]), 1)
 
     def checkIntersection(self, line):
         x1 = line.a[0]

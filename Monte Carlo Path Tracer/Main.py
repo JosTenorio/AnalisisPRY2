@@ -5,11 +5,11 @@ from PIL import Image
 from RayBounces import *
 
 def renderLight():
-    # global rayG
-    # global lineG
+    global rayG
+
     # loop through all the pixels
-    for x in range (0, 500):
-        for y in range (0, 500):
+    for x in range (500):
+        for y in range (500):
 
             # pixel color black
             color = 0
@@ -24,7 +24,6 @@ def renderLight():
                 # if the color was already calculated add it
                 if savedColors[x][y][lightSources.index(source)].all():
                     color += savedColors[x][y][lightSources.index(source)]
-                    effectiveRays += 1
 
                 else:
 
@@ -43,7 +42,7 @@ def renderLight():
                             break
 
                     if not collision:
-                        # lineG = directLine
+
                         # calculate light intensity
                         intensity = (1 - (sourceDist / 500)) ** 2
 
@@ -51,19 +50,19 @@ def renderLight():
                         currentValue = refValue * intensity * source.color
 
                         # add all light sources
-                        effectiveRays += 1
                         color += currentValue
+
+            # assign direct light value
+            drawingPixels[x][y] = color // len(lightSources)
 
             # calculate indirect lighting with monte carlo
             for i in range (NUM_SAMPLES):
 
                 # get random direction
-                angle = random.uniform(0, 2 * PI)
+                angle = random.uniform(0, 2 * math.pi)
 
                 # create ray from pixel to random direction
                 ray = Ray(x, y, angle)
-                # rayG = ray
-                # time.sleep(10)
 
                 # calculate pixel color by tracing ray path recursively
                 pathTrace = tracePath(ray, 0)
@@ -92,7 +91,7 @@ def renderLight():
             if effectiveRays == 0:
                 finalColor = BLACK
             else:
-                finalColor = color // effectiveRays
+                finalColor = (color + drawingPixels[x][y]) // effectiveRays
             drawingPixels[x][y] = finalColor
 
 def tracePath(ray, depth):
@@ -123,7 +122,7 @@ def tracePath(ray, depth):
                         break
 
                 if not collision:
-                    # rayG = ray
+                    #rayG = ray
                     #time.sleep(2)
 
                     # calculate light intensity
@@ -157,6 +156,8 @@ def tracePath(ray, depth):
         # create a new ray
         if boundaryCollided.specular:
             newRay = specularBounce(shortestIntersection, boundaryCollided, ray)
+        elif boundaryCollided.transparent:
+            newRay = refractiveBouce(shortestIntersection, boundaryCollided, ray)
         else:
             if depth == MAX_DEPTH - 1:
                 newRay = lightDirectedBounce(shortestIntersection, boundaryCollided, ray, orgLightSources)
@@ -165,7 +166,7 @@ def tracePath(ray, depth):
 
         if newRay is not None:
             #rayG = ray
-            #time.sleep(10)
+            #time.sleep(2)
 
             x = int(ray.pos[0])
             y = int(ray.pos[1])
@@ -197,9 +198,8 @@ def tracePath(ray, depth):
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 50
+NUM_SAMPLES = 100
 MAX_DEPTH = 1
-
 
 # colors
 YELLOW = np.array([1.0, 1.0, 0.75])
@@ -207,9 +207,6 @@ ORANGE = np.array([1.0, 0.9, 0.5])
 BLACK = np.array([0.0, 0.0, 0.0])
 RED = np.array([1.0, 0.0, 0.0])
 BLUE = np.array([0.0, 0.0, 1.0])
-
-# definitions
-PI = math.pi
 
 # pygame setup
 py.init()
@@ -241,20 +238,20 @@ savedColors = np.zeros((500, 500, len(lightSources), 3))
 
 # boundary positions
 boundaries = [
-    Line(155, 100, 155, 215, False),
-    Line(155, 100, 210, 100, False),
-    Line(210, 100, 210, 0, False),
-    Line(290, 100, 290, 0, False),
-    Line(92, 286, 155, 286, False),
-    Line(155, 286, 155, 425, False),
-    Line(345, 100, 345, 290, False),
-    Line(290, 100, 345, 100, False),
-    Line(235, 380, 235, 499, False),
+    Line(155, 99, 155, 215),
+    Line(155, 100, 210, 100),
+    Line(210, 101, 210, 0),
+    Line(290, 101, 290, 0),
+    Line(92, 286, 155, 286),
+    Line(155, 285, 155, 425),
+    Line(345, 99, 345, 290),
+    Line(290, 100, 345, 100),
+    Line(235, 380, 235, 499),
     Line(345, 155, 442, 155, True),
-    Line(442, 155, 499, 155, False),
-    Line(258, 370, 268, 360, False),
-    Line(285, 343, 295, 333, False),
-    Line(311, 318, 321, 308, False)
+    Line(441, 155, 499, 155, False, True),
+    Line(258, 370, 268, 360),
+    Line(285, 343, 295, 333),
+    Line(311, 318, 321, 308)
     ]
 
 # draw boundaries on screen
@@ -272,8 +269,7 @@ tracerThread = threading.Thread(target = renderLight, daemon = True)
 tracerThread.start()
 
 # global ray for tests
-rayG = Ray(490,180, np.deg2rad(260))
-lineG = boundaries[10]
+rayG = Ray(0, 0, 0)
 
 # main loop
 while RUNNING:
@@ -286,18 +282,14 @@ while RUNNING:
     # set screen to white
     WINDOW.fill((255, 255, 255))
 
-
     # convert drawing image to surface and set to screen
     surface = py.surfarray.make_surface(drawingPixels)
     WINDOW.blit(surface, (0, 0))
 
     # tests
-    drawBoundaries()
-    drawLightSources()
+    #drawBoundaries()
+    #drawLightSources()
     #rayG.draw(WINDOW)
-    #lineG.draw(WINDOW)
-
-
 
     # update pygame
     py.display.flip()

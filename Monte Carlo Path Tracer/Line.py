@@ -2,14 +2,17 @@ import pygame as py
 
 class Line:
 
-    def __init__(self, x1, y1, x2, y2, specular = False):
+    def __init__(self, x1, y1, x2, y2, specular = False, transparent = False):
         self.a = [x1, y1]
         self.b = [x2, y2]
         self.specular = specular
+        self.transparent = transparent
 
     def draw(self, window):
         if self.specular:
             py.draw.line(window, (0, 0, 255), self.a, self.b, 2)
+        elif self.transparent:
+            py.draw.line(window, (255, 255, 255), self.a, self.b, 2)
         else:
             py.draw.line(window, (0, 255, 0), self.a, self.b, 2)
 
