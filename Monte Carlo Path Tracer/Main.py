@@ -156,8 +156,6 @@ def tracePath(ray, depth):
         # create a new ray
         if boundaryCollided.specular:
             newRay = specularBounce(shortestIntersection, boundaryCollided, ray)
-        elif boundaryCollided.transparent:
-            newRay = refractiveBouce(shortestIntersection, boundaryCollided, ray)
         else:
             if depth == MAX_DEPTH - 1:
                 newRay = lightDirectedBounce(shortestIntersection, boundaryCollided, ray, orgLightSources)
@@ -198,7 +196,7 @@ def tracePath(ray, depth):
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 100
+NUM_SAMPLES = 10
 MAX_DEPTH = 1
 
 # colors
@@ -207,6 +205,7 @@ ORANGE = np.array([1.0, 0.9, 0.5])
 BLACK = np.array([0.0, 0.0, 0.0])
 RED = np.array([1.0, 0.0, 0.0])
 BLUE = np.array([0.0, 0.0, 1.0])
+WHITE = np.array([1.0, 1.0, 1.0])
 
 # pygame setup
 py.init()
@@ -227,9 +226,9 @@ referencePixels = np.array(refImage)
 
 # light positions
 lightSources = [
-    LightSource(185, 132, YELLOW),
-    LightSource(315, 132, YELLOW),
-    LightSource(435, 28, ORANGE, 485, 28)
+    LightSource(183, 134, YELLOW),
+    LightSource(313, 134, YELLOW),
+    LightSource(430, 32, ORANGE, 480, 32)
     ]
 orgLightSources = organizeLightSources(lightSources)
 
@@ -238,20 +237,19 @@ savedColors = np.zeros((500, 500, len(lightSources), 3))
 
 # boundary positions
 boundaries = [
-    Line(155, 99, 155, 215),
-    Line(155, 100, 210, 100),
-    Line(210, 101, 210, 0),
-    Line(290, 101, 290, 0),
-    Line(92, 286, 155, 286),
-    Line(155, 285, 155, 425),
-    Line(345, 99, 345, 290),
-    Line(290, 100, 345, 100),
+    Line(155, 101, 155, 215),
+    Line(155, 102, 210, 102),
+    Line(210, 103, 210, 0),
+    Line(290, 103, 290, 0),
+    Line(65, 288, 162, 288),
+    Line(153, 287, 153, 400),
+    Line(343, 101, 343, 295),
+    Line(290, 102, 345, 102),
     Line(235, 380, 235, 499),
-    Line(345, 155, 442, 155, True),
-    Line(441, 155, 499, 155, False, True),
-    Line(258, 370, 268, 360),
-    Line(285, 343, 295, 333),
-    Line(311, 318, 321, 308)
+    Line(370, 128, 370, 263, True),
+    Line(256, 373, 266, 363), #window False, True
+    Line(283, 346, 293, 336),
+    Line(309, 320, 319, 310)
     ]
 
 # draw boundaries on screen
@@ -287,8 +285,8 @@ while RUNNING:
     WINDOW.blit(surface, (0, 0))
 
     # tests
-    #drawBoundaries()
-    #drawLightSources()
+    drawBoundaries()
+    drawLightSources()
     #rayG.draw(WINDOW)
 
     # update pygame
