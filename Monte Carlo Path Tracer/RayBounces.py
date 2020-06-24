@@ -56,10 +56,37 @@ def specularBounce (intersection, segment, ray):
                 bouncedRay = specularNonVerticalRayDiagonalSegment(intersection, segment, rayLine, segmentMDenominator,rayLineMDenominator)
     return bouncedRay
 
-def refractiveBouce(intersection, segment, ray):
-    bouncedRay = Ray(intersection[0], intersection[1], 0)
-    bouncedRay.dir = ray.dir
-    return bouncedRay
+def refractiveBouce(intersection, segment, ray, n1, n2):
+    rayLine = Line(ray.pos[0], ray.pos[1], intersection[0], intersection[1])
+    segmentMNumerator = (segment.b[1] - segment.a [1])
+    rayLineMDenominator = (rayLine.b[0] - rayLine.a[0])
+    if segmentMNumerator == 0:
+        if rayLineMDenominator == 0:
+            refractedRayAngle = np.arccos(ray.dir[0])
+        else:
+            rayLineM = (rayLine.b[1] - rayLine.a[1]) / (rayLine.b[0] - rayLine.a[0])
+            incidentAngle = math.atan2(1, rayLineM)
+            if ray.pos[0] > intersection[0] and ray.pos[1] > intersection[1]:
+                refractedRayAngle = ((3 * math.pi) / 2) - np.arccos((n1 * np.cos(incidentAngle)) / n2)
+            elif ray.pos[0] < intersection[0] and ray.pos[1] > intersection[1]:
+                refractedRayAngle = ((3 * math.pi) / 2) + np.arccos((n1 * np.cos(incidentAngle)) / n2)
+            elif ray.pos[0] < intersection[0] and ray.pos[1] < intersection[1]:
+                refractedRayAngle = (math.pi / 2) - np.arccos((n1 * np.cos(incidentAngle)) / n2)
+            else:
+                refractedRayAngle = (math.pi / 2) + np.arccos((n1 * np.cos(incidentAngle)) / n2)
+    else:
+        rayLineM = (rayLine.b[1] - rayLine.a[1]) / rayLineMDenominator
+        normalM = 0
+        incidentAngle = math.atan2((normalM - rayLineM), 1 + (rayLineM * normalM))
+        if ray.pos[0] > intersection[0] and ray.pos[1] > intersection[1]:
+            refractedRayAngle = math.pi + np.arccos((n1 * np.cos(incidentAngle)) / n2)
+        elif ray.pos[0] < intersection[0] and ray.pos[1] > intersection[1]:
+            refractedRayAngle = (math.pi * 2) - np.arccos((n1 * np.cos(incidentAngle)) / n2)
+        elif ray.pos[0] < intersection[0] and ray.pos[1] < intersection[1]:
+            refractedRayAngle = np.arccos((n1 * np.cos(incidentAngle)) / n2)
+        else:
+            refractedRayAngle = math.pi - np.arccos((n1 * np.cos(incidentAngle)) / n2)
+    return Ray (intersection[0], intersection[1], refractedRayAngle)
 
 def directedDiagonalSegment (ray, sourcesIndexes, lightSources, m, boundary):
     for index in sourcesIndexes:

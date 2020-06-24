@@ -2,7 +2,7 @@ import pygame as py
 
 class Line:
 
-    def __init__(self, x1, y1, x2, y2, specular = False, transparent = False):
+    def __init__(self, x1, y1, x2, y2, specular = False, transparent = False,):
         self.a = [x1, y1]
         self.b = [x2, y2]
         self.specular = specular

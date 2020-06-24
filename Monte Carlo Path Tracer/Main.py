@@ -36,10 +36,11 @@ def renderLight():
                     # check if line segments intersect
                     collision = False
                     for boundary in boundaries:
-                        intersection = directLine.checkIntersection(boundary)
-                        if intersection is not None:
-                            collision = True
-                            break
+                        if not boundary.transparent:
+                            intersection = directLine.checkIntersection(boundary)
+                            if intersection is not None:
+                                collision = True
+                                break
 
                     if not collision:
 
@@ -146,10 +147,11 @@ def tracePath(ray, depth):
     boundaryCollided = None
     shortestIntersection = [0, 0, 1000000]
     for boundary in boundaries:
-        intersection = ray.checkIntersection(boundary)
-        if intersection is not None and intersection[2] < shortestIntersection[2]:
-            shortestIntersection = intersection
-            boundaryCollided = boundary
+        if not boundary.transparent:
+            intersection = ray.checkIntersection(boundary)
+            if intersection is not None and intersection[2] < shortestIntersection[2]:
+                shortestIntersection = intersection
+                boundaryCollided = boundary
 
     if boundaryCollided is not None:
 
@@ -196,7 +198,7 @@ def tracePath(ray, depth):
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 10
+NUM_SAMPLES = 50
 MAX_DEPTH = 1
 
 # colors
@@ -288,6 +290,20 @@ while RUNNING:
     drawBoundaries()
     drawLightSources()
     #rayG.draw(WINDOW)
+
+    # refraction example (not implemented)
+
+    # ray = Ray (450,250, np.deg2rad(150))
+    # line1 = Line (400,100,400,500)
+    # line2 = Line(300,100,300,500)
+    # ray.draw (WINDOW)
+    # line1.draw(WINDOW)
+    # line2.draw(WINDOW)
+    # refractedRay1 = refractiveBouce(ray.checkIntersection(line1), line1, ray, 1.00002926, 1.45)
+    # refractedRay2 = refractiveBouce(refractedRay1.checkIntersection(line2), line2, refractedRay1, 1.45, 1.00002926)
+    # refractedRay1.draw(WINDOW)
+    # refractedRay2.draw(WINDOW)
+
 
     # update pygame
     py.display.flip()
