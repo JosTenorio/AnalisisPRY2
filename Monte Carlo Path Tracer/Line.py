@@ -10,7 +10,7 @@ class Line:
 
     def draw(self, window):
         if self.specular:
-            py.draw.line(window, (0, 0, 255), self.a, self.b, 2)
+            py.draw.line(window, (0, 200, 255), self.a, self.b, 2)
         elif self.transparent:
             py.draw.line(window, (255, 255, 255), self.a, self.b, 2)
         else:

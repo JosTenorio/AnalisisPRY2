@@ -1,11 +1,14 @@
 import sys
 import threading
 import time
+import timeit
 from PIL import Image
 from RayBounces import *
 
 def renderLight():
-    global rayG
+    global lineG
+    #time.sleep(3)
+    start = timeit.default_timer()
 
     # loop through all the pixels
     for x in range (500):
@@ -43,6 +46,8 @@ def renderLight():
                                 break
 
                     if not collision:
+                        #lineG = directLine
+                        #time.sleep(2)
 
                         # calculate light intensity
                         intensity = (1 - (sourceDist / 500)) ** 2
@@ -89,14 +94,15 @@ def renderLight():
                     color += currentValue
 
             # average pixel value and assign
-            if effectiveRays == 0:
-                finalColor = BLACK
-            else:
-                finalColor = (color + drawingPixels[x][y]) // effectiveRays
-            drawingPixels[x][y] = finalColor
+            if effectiveRays != 0:
+                drawingPixels[x][y] = (drawingPixels[x][y] + color) // effectiveRays
+
+    stop = timeit.default_timer()
+    print('Time: ', stop - start)
+
 
 def tracePath(ray, depth):
-    global rayG
+    global lineG
 
     # if its the last ray
     if depth >= MAX_DEPTH:
@@ -117,13 +123,14 @@ def tracePath(ray, depth):
                 #check if ray collisions with a boundary
                 collision = False
                 for boundary in boundaries:
-                    intersection = ray.checkIntersection(boundary)
-                    if intersection is not None and intersection[2] < distance:
-                        collision = True
-                        break
+                    if not boundary.transparent:
+                        shortestIntersection = ray.checkIntersection(boundary)
+                        if shortestIntersection is not None and shortestIntersection[2] < distance:
+                            collision = True
+                            break
 
                 if not collision:
-                    #rayG = ray
+                    #lineG = Line(ray.pos[0], ray.pos[1], intersection[0], intersection[1])
                     #time.sleep(2)
 
                     # calculate light intensity
@@ -154,6 +161,8 @@ def tracePath(ray, depth):
                 boundaryCollided = boundary
 
     if boundaryCollided is not None:
+        #lineG = Line(ray.pos[0], ray.pos[1], shortestIntersection[0], shortestIntersection[1])
+        #time.sleep(2)
 
         # create a new ray
         if boundaryCollided.specular:
@@ -165,8 +174,6 @@ def tracePath(ray, depth):
                 newRay = randomBounce(shortestIntersection, boundaryCollided, ray)
 
         if newRay is not None:
-            #rayG = ray
-            #time.sleep(2)
 
             x = int(ray.pos[0])
             y = int(ray.pos[1])
@@ -244,12 +251,12 @@ boundaries = [
     Line(210, 103, 210, 0),
     Line(290, 103, 290, 0),
     Line(65, 288, 162, 288),
-    Line(153, 287, 153, 400),
+    Line(153, 287, 153, 400, False, True),
     Line(343, 101, 343, 295),
     Line(290, 102, 345, 102),
     Line(235, 380, 235, 499),
     Line(370, 128, 370, 263, True),
-    Line(256, 373, 266, 363), #window False, True
+    Line(256, 373, 266, 363),
     Line(283, 346, 293, 336),
     Line(309, 320, 319, 310)
     ]
@@ -269,7 +276,7 @@ tracerThread = threading.Thread(target = renderLight, daemon = True)
 tracerThread.start()
 
 # global ray for tests
-rayG = Ray(0, 0, 0)
+lineG = Line(0, 0, 0, 0)
 
 # main loop
 while RUNNING:
@@ -289,12 +296,11 @@ while RUNNING:
     # tests
     drawBoundaries()
     drawLightSources()
-    #rayG.draw(WINDOW)
+    lineG.draw(WINDOW)
 
-    # refraction example (not implemented)
-
-    # ray = Ray (450,250, np.deg2rad(150))
-    # line1 = Line (400,100,400,500)
+    # REFRACTION EXAMPLE
+    # ray = Ray(450,250, np.deg2rad(150))
+    # line1 = Line(400,100,400,500)
     # line2 = Line(300,100,300,500)
     # ray.draw (WINDOW)
     # line1.draw(WINDOW)
@@ -303,7 +309,6 @@ while RUNNING:
     # refractedRay2 = refractiveBouce(refractedRay1.checkIntersection(line2), line2, refractedRay1, 1.45, 1.00002926)
     # refractedRay1.draw(WINDOW)
     # refractedRay2.draw(WINDOW)
-
 
     # update pygame
     py.display.flip()
