@@ -278,7 +278,7 @@ tracerThread.start()
 # global ray for tests
 lineG = Line(0, 0, 0, 0)
 
-# main loop
+# drawing loop
 while RUNNING:
 
     for event in py.event.get():
@@ -294,9 +294,9 @@ while RUNNING:
     WINDOW.blit(surface, (0, 0))
 
     # tests
-    drawBoundaries()
-    drawLightSources()
-    lineG.draw(WINDOW)
+    # drawBoundaries()
+    # drawLightSources()
+    # lineG.draw(WINDOW)
 
     # REFRACTION EXAMPLE
     # ray = Ray(450,250, np.deg2rad(150))
