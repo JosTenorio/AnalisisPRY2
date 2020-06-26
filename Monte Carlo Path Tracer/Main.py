@@ -33,9 +33,6 @@ def renderLight():
                     # create a line segment from pixel to light source
                     directLine = Line(x, y, source.pos[0], source.pos[1])
 
-                    # calculate distance from pixel to light source
-                    sourceDist = math.sqrt(((x - source.pos[0]) ** 2)+((y - source.pos[1]) ** 2))
-
                     # check if line segments intersect
                     collision = False
                     for boundary in boundaries:
@@ -48,6 +45,9 @@ def renderLight():
                     if not collision:
                         #lineG = directLine
                         #time.sleep(2)
+
+                        # calculate distance from pixel to light source
+                        sourceDist = math.sqrt(((x - source.pos[0]) ** 2) + ((y - source.pos[1]) ** 2))
 
                         # calculate light intensity
                         intensity = (1 - (sourceDist / 500)) ** 2
@@ -205,7 +205,7 @@ def tracePath(ray, depth):
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 50
+NUM_SAMPLES = 10
 MAX_DEPTH = 1
 
 # colors
