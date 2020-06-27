@@ -55,6 +55,9 @@ def renderLight():
                         # combine color, light source and light color
                         currentValue = refValue * intensity * source.color
 
+                        # save the current pixels color for the selected source
+                        savedColors[x][y][lightSources.index(source)] = currentValue
+
                         # add all light sources
                         color += currentValue
 
@@ -205,7 +208,7 @@ def tracePath(ray, depth):
 WIDTH = 500
 HEIGHT = 500
 RUNNING = True
-NUM_SAMPLES = 10
+NUM_SAMPLES = 50
 MAX_DEPTH = 1
 
 # colors
