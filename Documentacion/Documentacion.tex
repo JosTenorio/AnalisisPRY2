@@ -87,7 +87,7 @@ Segundo, se implementó un cierto grado de programación dinámica en el algorit
 A continuación se mostraran varios renderizados hechos por el algoritmo, junto a los tiempos de ejecución de los mismos. Cabe resaltar que las siguientes pruebas se realizaron en un equipo con procesador Intel core i7-4790 y 16 GB de RAM y que los tiempos de ejecución se midieron mediante la librería \textit{timeit} de \textit{Python}. Para dicha medición, se crea e inicia un cronómetro estándar de \textit{timeit} al principio de la función principal de renderizado, y el mismo se detiene como última instrucción de dicha función, por lo que se puede decir que los tiempos de ejecución corresponden más específicamente al tiempo de ejecución de la síntesis de la imagen, sin tomar en cuenta instrucciones como la preparación de la ventana a mostrar o la definición de las estructuras de datos a usar. 
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[scale=0.68]{Reference Image.png}}
+\centerline{\includegraphics[scale=0.68]{Imagenes/Reference Image.png}}
 \caption{Imagen a renderizar. Las fuentes de luz se circulan en rojo. Las superficies se resaltan en azul las especulares, blanco las transparentes y verde las regulares}
 \label{Imagen de referencia}
 \end{figure}
@@ -95,7 +95,7 @@ A continuación se mostraran varios renderizados hechos por el algoritmo, junto 
 En Fig. 1 se puede apreciar la imagen que se usará de modelo para el renderizado en la mayoría de las pruebas. Esta imagen tiene un tamaño de 500x500 pixeles y cuenta con 3 fuentes de luz: dos circulares y una lineal, y 13 segmentos: 11 regulares, uno transparente y uno especular. Es importante tener en cuenta la cantidad de segmentos y fuentes de luz porque estos constituyen los principales factores, aparte de la cantidad de muestras y profundidad, que definen el tiempo de ejecución del algoritmo. Lo anterior se debe que los ciclos presentes en el algoritmo contarán con más iteraciones conforme se aumente el número de segmentos y fuentes de luz. Se entiende como muestras a la cantidad de rayos que son lanzados de cada pixel para definir su iluminación indirecta. Y se entiende como profundidad a la cantidad de rebotes que debe realizar cada rayo. Todas las pruebas se realizaron con un valor de profundidad igual a 1.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[scale=0.68]{Complete Lighting (50 Samples).png}}
+\centerline{\includegraphics[scale=0.68]{Imagenes/Complete Lighting (50 Samples).png}}
 \caption{Renderización completa con 50 muestras. Tiempo de ejecución: 16 minutos con 20 segundos.}
 \label{50 muestras completo}
 \end{figure}
@@ -103,7 +103,7 @@ En Fig. 1 se puede apreciar la imagen que se usará de modelo para el renderizad
 Luego de varias corridas de prueba, se determinó que el programa genera renderizados de calidad aceptable a partir de las 50 muestras, como se puede apreciar en la Fig. 2. En la misma también se puede notar un efecto arenoso en ciertas zonas del renderizado, como el superior izquierdo o el inferior derecho de la imagen, conocido como ruido o \textit{noise}. Dicho efecto se produce debido a la baja cantidad de muestras usadas, ya que a muchos píxeles se les calculará muy pocos o ningún rayo de iluminación indirecta, lo cual los oscurece o directamente los deja en negro. Asimismo, la falta de \textit{noise} en aquellas zonas con iluminación directa evidencia el uso de \textit{Ray Tracing} para dicha tarea, ya que el mismo no se ve afectado por la cantidad de muestras usadas. La compensación de este afecto arenoso cuando se usan pocas muestras fue una de las razones por la que se decidió calcular la iluminación directa por aparte en un \textit{Ray Tracer} sin el modelo de Monte Carlo.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[scale=0.68]{Complete Lighting (225 Samples).png}}
+\centerline{\includegraphics[scale=0.68]{Imagenes/Complete Lighting (225 Samples).png}}
 \caption{Renderización completa con 225 muestras. Tiempo de ejecución: 1 hora con 12 minutos y 47 segundos.}
 \label{225 muestras completo}
 \end{figure}
@@ -111,7 +111,7 @@ Luego de varias corridas de prueba, se determinó que el programa genera renderi
 Una vez que se usan cantidades mayores de muestras, como en las corridas apreciables en Fig. 3 y 4, el \textit{noise} se reduce drásticamente, ya que para cada pixel se producen mas rayos validos y la precisión de su valor RGB aumenta. No obstante, también se puede notar el considerable incremento en el tiempo de ejecución, ya que si comparamos la prueba en Fig. 2 con la de Fig. 3, hubo un aumento de aproximadamente 3 417 segundos por 175 muestras de más. Las pruebas aquí mostradas, aunadas a las que se realizaron con muchas otras cantidades, permiten estimar un aumento lineal del tiempo de ejecución conforme se aumenta la cantidad de muestras. Para el caso de la imagen Fig. 1, y las condiciones anteriormente especificadas, se promedió un aumento de 19 segundos al tiempo de ejecución por cada incremento unitario de la cantidad de muestras. Lo anterior se puede resumir en que se puede estimar el tiempo de ejecución del algoritmo, por medio de la fórmula \(s = 19 * n\), donde \textit{s} corresponde al tiempo de ejecución en segundos y n a la cantidad de muestras.
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[scale=0.68]{Complete Lighting (500 Samples)}}
+\centerline{\includegraphics[scale=0.68]{Imagenes/Complete Lighting (500 Samples)}}
 \caption{Renderización completa con 500 muestras. Tiempo de ejecución: 2 horas con 39 minutos y 21 segundos.}
 \label{500 muestras completo}
 \end{figure}
@@ -121,7 +121,7 @@ Al analizar los resultados con mayor cantidad de muestras se puede observar que 
 Además, se puede observar en los resultados que el segmento central de la imagen tiene un color mas claro que el segmento de la derecha, esto se debe a los distintos colores de las fuentes de luz. Para las luces redondas del segmento central se utilizo un color amarillo, mientras que para la luz lineal se utilizo un color anaranjado. Estos colores debían influenciar los colores de los pixeles que recibían luz de cada fuente. Por otro lado, durante las pruebas realizadas se notó que por los colores predominantes en la imagen utilizada (gris, negro, café oscuro, etc. ) el efecto de \textit{Color Bleeding} programado en el \textit{Path Tracing} era difícil de notar. Debido a lo anterior se decidió realizar otras pruebas con una imagen que facilitará la distinción de la presencia de \textit{Color Bleeding}, dicha imagen se puede apreciar en Fig. 5. Nótese que el único cambio respecto a la imagen modelo en Fig. 1 es el uso de un fondo o "suelo" blanco y el cambio de color de las "paredes" a azul y rojo, además del uso de fuentes de luz totalmente blancas. La síntesis de la imagen resultante de esta prueba se puede observar en Fig. 6, en donde claramente se nota como los colores de las paredes influencian los colores de los demás pixeles, en especial los mas cercanos a dichas paredes. 
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[scale=0.68]{Reference Image (Color Bleed).png}}
+\centerline{\includegraphics[scale=0.68]{Imagenes/Reference Image (Color Bleed).png}}
 \caption{Imagen a renderizar para la prueba del \textit{Color Bleeding}. Las fuentes de luz se circulan en rojo. Las superficies se resaltan en azul las especulares, blanco las transparentes y verde las regulares}
 \label{Imagen de referencia color bleeding}
 \end{figure}
@@ -129,15 +129,18 @@ Además, se puede observar en los resultados que el segmento central de la image
 En cuanto a las limitaciones del algoritmo, la realidad es que los tiempos de ejecución fueron mucho más elevados de lo que se pronosticaba al principio del proyecto. La causa de esto es la gran cantidad de ciclos presentes a lo largo de la función de renderización. Estos ciclos no son verdaderamente extensos por si solos, ya que la mayoría son ciclos sobre la cantidad de segmentos o la cantidad de fuentes de luz. No obstante, estos ciclos se deben realizar tantas veces como la cantidad de muestras elegida y para cada uno de los 250000 pixeles, lo cual para una renderizacion de 500 muestras resulta en 125000000 ciclos de aproximadamente 10 elementos cada uno. Además, si bien sí se logro obtener la calidad de imagen esperada, el número de muestras requeridas (y por ende el tiempo de ejecución) para esto es bastante alto si se le compara con otros métodos que generan los rayos desde las fuentes de luz y los siguen en sus interacciones con los objetos. Otro detalle a notar es que las superficies especulares tienden a amplificar excesivamente el efecto \textit{Color Bleeding}, llegando incluso a imponer su propio color sobre el color de los píxeles a los que la luz reflejada llega. Lo anterior es fácil de notar en Fig. 4 y 6. Si bien este efecto ayudó a corroborar el correcto funcionamiento de la reflexión especular, la realidad es que se le podría considerar una debilidad del algoritmo. Otra hipótesis manejada en cuanto a las limitaciones del programa creado es que el mismo ve su eficiencia muy afectada con la adición de más profundidad a los rebotes de los rayos creados, no obstante, en pruebas tempranas del programa se notó que el uso de muchos rebotes contribuía muy poco a mejorar la calidad del renderizado, ya que se había implementado los rebotes dirigidos que maximizaban la efectividad de los rayos, y de ahí que se trabajo con un solo rebote durante el resto del proyecto. 
 
 \begin{figure}[htbp]
-\centerline{\includegraphics[scale=0.68]{Complete Lighting (500 Samples Color Bleed).png}}
+\centerline{\includegraphics[scale=0.68]{Imagenes/Complete Lighting (500 Samples Color Bleed).png}}
 \caption{Renderización para la prueba del \textit{Color Bleeding} con 500 muestras.}
 \label{500 muestras color bleeding.}
 \end{figure}
 
 \section{Conclusión}
 
-AQUI VA LA CONCLUSION
+En síntesis, los \textit{Ray Tracers} constituyen una alternativa a considerar cuando se buscan mejoras en la calidad del rendereizado de imágenes, además, el \textit{Path Tracing} es una forma de compensar la principal debilidad de los \textit{Ray Tracers}, es decir, su lentitud, por medio del uso de algoritmos de Monte Carlo. Lo anterior quedo reforzado por la completitud en el presente proyecto de un programa de \textit{Python} capaz de sintetizar imágenes 2D con iluminación directa gracias a un \textit{Ray Tracer} e iluminación indirecta gracias a un \textit{Path Tracer}. Aunado a la implementación de la técnica de \textit{Ray Tracing} en la iluminación calculada por el programa, tambíen se implementó satisfactoriamente la simulación de interacciones lumínicas con superficies transparentes, regulares y especulares, donde las interacciones de las dos últimas incluyen el efecto deseado de \textit{Color Bleeding} en los píxeles cercanos.
 
+Si bien fue posible implementar todas las funcionalidades deseadas al proyecto, el tiempo de ejecución del producto final no cumplió las expectativas informalmente planteadas durante el planteamiento del problema, si bien se concluye que el mismo aún se encuentra en un rango aceptable. Por otro lado, sí se obtuvó una calidad de imagen y simulación de la luz acorde a lo esperado al principio del proyecto, a costa del uso de muchas muestras y por ende muchos recursos. La única otra limitación significativa en la solución presentada es la anómala interacción entre las superficies especulares y el efecto de \textit{Color Bleeding}, en donde las primeras tienden a amplificar excesivamente la magnitud de la segunda. Nuevamente, se da por aceptable la debilidad anterior, principalmente por la especificidad del escenario en el que la misma ocurre.
+
+Finalmente, se dejan al aire unas eventuales mejoras y optimizaciones  a realizar a la solución aquí expuesta, la principal de ellas siendo la exploración de la posibilidad de modificar el \textit{Path Tracer} para generar los rayos de las luz en las fuentes de luz en lugar de en cada píxel, y modificar el código de seguimiento de rayos concordemente. Se sospecha que de ser posible mantener la calidad de síntesis de imagen una vez realizada la modificación anterior, se estaría ante una considerable mejora en cuanto al tiempo de ejecución del programa. 
 \section{Acceso al proyecto}
 El repositorio de GitHub en el cual se ubican todos los archivos empleados para el desarrollo de este proyecto puede ser accesado mediante el siguiente link: \url{https://github.com/TilapiaBoi/AnalisisPRY2}
 
